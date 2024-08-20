@@ -215,3 +215,67 @@ The key idea is to **use the derivative of the function to determine the directi
 ![gradient_descent](src/gradient_descent4.png)
 The algorithm starts with an initial position defined by two coordinates, $x_0$ and $y_0$. We calculate the gradient, which is the vector of partial derivatives with respect to x and y, and **move in the direction of the negative gradient**. This step is repeated until we are close enough to the minimum point. 
 ![gradient_descent](src/gradient_descent5.png)
+
+- Normalization helps to increase the efficiency: 
+  
+   - When original arrays X and Y have different units, the cost function will be much steeper. Then you would need to take a significantly smaller learning rate  𝛼
+ , and the algorithm will require thousands of iterations to converge instead of a few dozens.  
+   - To make gradient descent algorithm efficient, you need to bring them to the same units. A common approach to it is called normalization: substract the mean value of the array from each of the elements in the array and divide them by standard deviation (a statistical measure of the amount of dispersion of a set of values).  
+   - When making predictions you need to normalize the inputs and denormalize the output as well.
+
+#### 4.4 Common libraries for linear regression
+
+1. np.Polynomial.fit and pass in a degree of 1, minimising the sum of squared errors. 
+2. from sklearn.linear_model import LinearRegression
+
+### 5. Optimization in Neural Networks
+#### 5.1 Regression with Perceptron
+
+A perceptron is the fundamental unit of a neural network. It is a mathematical model inspired by the way neurons work in the human brain. A perceptron takes multiple inputs, multiplies them by corresponding weights, and combines them to produce an output.
+
+![perceptron](src/perceptron0.png)
+
+Key differences between perceptron and linear regression: 
+- Activation Function: A perceptron uses an activation function to introduce non-linearity to the model. The activation function determines the output based on the input sum.
+- Output: A perceptron can output continuous or discrete values, used for both classification and regression tasks.  
+Overall, a perceptron is a more flexible and versatile model compared to a traditional linear regression model.  
+
+![perceptron](src/perceptron1.png)
+
+- We square the errors to consider negative and positive errors equally.
+- In machine learning, we also multiply it by a half. The reason is really more cosmetic because in reality, when you take the derivative, then you get a lingering two. We put a 1/2 there to cancel with that two and then we have less numbers to keep track on.  
+  
+![perceptron](src/perceptron2.png)
+
+By repeating this process, we can find optimal values for the weights and bias that result in a model with a small error.
+![perceptron](src/perceptron3.png)
+![perceptron](src/perceptron4.png)  
+
+#### 5.2 Training process for a simple Neural Network
+
+![nn](src/nn.png)  
+
+Weight (𝑤) and bias (𝑏) are the parameters that will get updated when you train the model. They are initialized to some random values or set to 0 and updated as the training progresses.  
+
+1. **Forward propagation** - calculate predicted output for all training samples: $Z=  w X + b$    , $\hat{Y}= Z$
+2. For each training example, measure the difference between original values 𝑦(𝑖) and predicted values 𝑦̂ (𝑖) with the **loss function**: $𝐿(𝑤,𝑏)=1/2*(𝑦̂(𝑖)−𝑦(𝑖))^2$
+3. Take an average of the loss function values for each of the training examples, which will be the **cost function**:
+
+$$\mathcal{L}\left(w, b\right)  = \frac{1}{2m}\sum_{i=1}^{m} \left(\hat{y}^{(i)} - y^{(i)}\right)^2.$$
+
+4. **Backward propagation**: calculate the adjustments for the weight and bias, minimizing the cost function.  
+   ![nn](src/nn1.png)  
+
+The general methodology to build a neural network is to:
+1. Define the neural network structure ( # of input units, # of hidden units, etc).
+2. Initialize the model's parameters.
+3. Define a cost function
+4. Loop (until the cost function stops decreasing):
+   - Implement forward propagation (calculate the perceptron output)
+   - Compute the cost
+   - Implement backward propagation (calculate  gradients to get the required corrections for the parameters)
+   - Update parameters.
+5. Make predictions.
+ 
+#### 5.3 Classification with Perceptron
+
