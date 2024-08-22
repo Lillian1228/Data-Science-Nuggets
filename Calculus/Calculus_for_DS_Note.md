@@ -279,3 +279,79 @@ The general methodology to build a neural network is to:
  
 #### 5.3 Classification with Perceptron
 
+![perceptron](src/perceptron5.png)
+The activation function transforms the continuous output of the prediction function into a binary or categorical prediction. In classification problems, the sigmoid function is commonly used as the activation function to convert the weighted sum into a probability value.
+![perceptron](src/perceptron6.png)  
+
+ The derivative of the sigmoid function is sigmoid times 1 minus sigmoid, which makes it easy to calculate and useful in various machine learning algorithms.
+![perceptron](src/perceptron7.png)  
+![perceptron](src/perceptron8.png)  
+
+The log loss function measures the error between the predicted value (y-hat) and the actual value (y) in a classification problem. It calculates the logarithm of the predicted value if the actual value is 1, and the logarithm of the complement of the predicted value if the actual value is 0. 
+
+The log loss function penalizes larger differences between the predicted and actual values, assigning a larger loss value when they are far apart and a smaller loss value when they are close to each other. 
+![perceptron](src/perceptron9.png)
+![perceptron](src/perceptron10.png)
+![perceptron](src/perceptron11.png)  
+
+#### 5.4 Classification with a Neural Network
+
+![nn](src/nn2.png) 
+![nn](src/nn3.png) 
+
+Backpropagation is a method that involves calculating derivatives using the chain rule and using them to update the weights and biases of the neural network. 
+
+![nn](src/nn4.png) 
+![nn](src/nn5.png) 
+
+### 6. Newton's Method
+
+#### 6.1 Introduction
+
+An optimization technique that can be used to find the zeros of a function. 
+
+![NM](src/NM0.png)
+It can also be used for optimization by finding the zeros of the derivative of the function we want to minimize. By finding the zeros of the derivative, we are able to approximate the minimum of the function. 
+![NM](src/NM1.png)
+
+#### 6.2 Second Derivative
+
+The second derivative is the derivative of a derivative and it helps us determine if a point is a maximum or minimum in optimization problems by providing information about the curvature of a function. One example is acceleration, which is the rate of change of velocity with respect to time. 
+![NM](src/NM2.png)
+![NM](src/NM3.png)
+If the second derivative is positive at a particular point, it indicates that the function is concave up at that point. In this case, if the first derivative is zero at that point, it suggests that the point is a **local minimum**.
+
+ If the second derivative is negative at a particular point, it indicates that the function is concave down at that point. If the first derivative is zero at that point, it suggests that the point is a **local maximum**. 
+
+![NM](src/NM4.png)
+
+#### 6.3 Hessian Matrix
+
+Hessian matrix is a matrix containing second derivatives. 
+![NM](src/NM5.png)
+![NM](src/NM6.png)
+![NM](src/NM7.png)
+Symmetry: The Hessian matrix is symmetric, which means that the order of differentiation does not matter. The second partial derivative with respect to x and y is the same as the second partial derivative with respect to y and x.
+![NM](src/NM8.png)
+![NM](src/NM9.png)
+The Hessian matrix can provide information about the concavity or convexity of a function. If all the eigenvalues of the Hessian matrix are positive, then the function is convex. If all the eigenvalues are negative, then the function is concave.
+![NM](src/NM10.png)
+![NM](src/NM11.png)
+![NM](src/NM12.png)
+![NM](src/NM12_1.png)
+
+#### 6.4 Newton's Method for two variables
+![NM](src/NM13.png)
+![NM](src/NM14.png)
+
+Fast convergence: Newton's method converges to the minimum or maximum of a function quickly compared to gradient descent. However it can be **sensitive to the initial guess**. If the initial guess is far from the optimal solution or falls into a region with poor convergence properties, the method may fail to converge or converge to a local minimum or maximum instead of the global one.
+
+Computational Complexity: The method involves calculating and inverting the Hessian matrix, which can be computationally expensive, especially for functions with a large number of variables.
+
+### 7. Coding helps
+
+For dot product
+- method 1: * or np.multiply() perform element-wise multiplication; np.sum() sum up.
+- method 2: np.dot directly returns the sum of vector product.  
+  
+For matrix multiplication, use @ for Python 3.5 or above, and np.matmul for earlier versions.
