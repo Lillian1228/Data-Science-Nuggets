@@ -68,6 +68,65 @@ Python functions and methods are similar in many ways. They are both callable ob
 The main difference between functions and methods is that **methods are defined within a class and are associated with instances of that class**. Methods are often considered "selfish" because they always put their self (the instance they belong to) first.  
 Functions, on the other hand, live outside of any individual instance or object.  
 
+#### 1.7 Testing Classes
+
+To test a user-defined class, you will create test cases that check whether instances are created properly, and you will **create test cases for each of the methods** as functions, by invoking them on particular instances and seeing whether they produce the correct return values and side effects.
+
+There are two types of tests depending on what the methods try to do:  
+1. Return value test: whether they produce the correct return values
+2. Side effect test: To test a method that changes the value of an instance variable
+
+#### 1.8 Class Decorators
+
+Python has a “decorator” syntax” that allows us to modify the behavior of functions or classes. 
+
+A decorator is a function that accepts a function as an argument and returns a new function. The new function is usually a “wrapped” version of the original function. 
+
+The decorator syntax is to place an @ symbol followed by the name of the decorator function on the line before the function definition. 
+
+There are two ways we can use decorators with classes: (1) by decorating individual class methods or (2) by decorating the class itself.
+
+```Python
+def addLogging(func): # The argument, func is a method of a class
+
+    def wrapper(self, x): # x is the argument that we're going to pass to func
+        print(f"About to call the method with argument {x}")
+        result = func(self, x) # actually call the method and store the result
+        print(f"Done with the method invocation with argument {x} on instance {self}. Result: {result}")
+        return result # return whatever our function returned
+
+    return wrapper # return our new function
+
+def addBeep(cls):
+    cls.beep = lambda self: print(f"{self.model} says 'Beep!'")
+    return cls
+
+@addBeep # decorating the class itself
+class Car:
+    def __init__(self, make, model, color, mileage):
+        self.make = make
+        self.model = model
+        self.color = color
+        self.mileage = mileage
+
+    @addLogging # decorating class methods
+    def drive(self, miles):
+        self.mileage += miles
+        return self.mileage
+
+    @addLogging
+    def rePaint(self, color):
+        self.color = color
+
+    def __str__(self):
+        return(f"***{self.color} {self.make} {self.model} with {self.mileage} miles***")
+
+corvette = Car("Chevrolet", "Corvette", "red", 0)
+
+corvette.drive(100)
+corvette.beep()
+```
+
 ### 2. Objects and Instances
 
 #### 2.1 Sorting list of Instances
@@ -78,9 +137,12 @@ Functions, on the other hand, live outside of any individual instance or object.
 
 Instance variables: Every instance of a class can have its own instance variables. These variables represent the properties or attributes of a specific instance.  
 
-Class variables: Classes can also have their own class variables. These variables are shared among all instances of the class and belong to the class itself. They are defined outside of any method in the class. Class methods are also a form of class variables. 
+Class variables: Classes can also have their own class variables. These variables are shared among all instances of the class and belong to the class itself. They are **defined outside of any method in the class**. Class methods are also a form of class variables. 
 
-- Search order for variables: When accessing a variable using the instance name, Python first searches inside the instance for the variable. If it is not found, it then searches inside the class. If the variable is still not found, a runtime error occurs.  
+- When the interpreter sees an expression of the form obj.varname, it:
+  1) Checks if the object has an instance variable set. If so, it uses that value.
+  2) If it doesn’t find an instance variable, it checks whether the class has a class variable. If so it uses that value.
+  3) If it doesn’t find an instance or a class variable, it creates a runtime error.
 
 ```Python
 class MyClass:
@@ -105,3 +167,4 @@ print(inst_1.instance_lst is inst_2.instance_lst,
       inst_1.class_lst is inst_2.class_lst)
 # False, True
 ```
+
