@@ -168,3 +168,60 @@ print(inst_1.instance_lst is inst_2.instance_lst,
 # False, True
 ```
 
+### 3. Inheritance
+
+Classes can “inherit” methods and class variables from other classes. It’s useful when someone else has defined a class in a module or library, and you just want to override a few things without having to reimplement everything they’ve done.
+#### 3.1 Inheriting Varibales and Methods
+
+In the definition of the inherited class, you only need to specify the methods and instance variables that are different from the parent class (the **parent class**, or the **superclass**).
+
+```Python
+# Here's the new definition of class Cat, a subclass of Pet.
+class Cat(Pet): # the class name that the new class inherits from goes in the parentheses, like so.
+    sounds = ['Meow'] # existing class variables can be updated 
+
+    def chasing_rats(self):
+        return "What are you doing, Pinky? Taking over the world?!"
+
+```
+
+This is how the interpreter looks up attributes:
+
+1. First, it checks for an instance variable or an instance method by the name it’s looking for.
+
+2. If an instance variable or method by that name is not found, it checks for a class variable.
+
+3. If no class variable is found, it looks for a class variable in the parent class.
+
+4. If no class variable is found, the interpreter looks for a class variable in THAT class’s parent (the “grandparent” class).
+
+5. This process goes on until the last ancestor is reached, at which point Python will signal an error.
+
+If a method is defined for a class, and also defined for its parent class, the subclass’ method is called and not the parent’s. This follows from the rules for looking up attributes.
+
+#### 3.2 Invoking Parent Class's Method
+
+Sometimes the parent class has a useful method, but you just need to execute a little extra code when running the subclass’s method. You can override the parent class’s method in the subclass’s method with the same name, but also invoke the parent class’s method with **super().method()**. 
+
+```Python
+class Dog(Pet):
+    sounds = ['Woof', 'Ruff']
+
+    def feed(self):
+        # equivalent: Pet.feed(self)
+        super().feed()
+        print("Arf! Thanks!")
+
+d1 = Dog("Astro")
+
+d1.feed()
+
+```
+
+Pet.feed(self) is equivalent to super().feed(). However it is less flexible in cases when parent classes change names or the hierarchy.
+
+#### 3.3 Multiple inheritance
+
+In Python, a class can inherit from more than one parent class. This is called multiple inheritance.  
+
+ It’s generally a good rule to avoid multiple inheritance unless it provides a clear and significant benefit. Always consider simpler alternatives, such as composition (using an instance of one class as an instance variable inside of another class) or single inheritance, before turning to multiple inheritance.
