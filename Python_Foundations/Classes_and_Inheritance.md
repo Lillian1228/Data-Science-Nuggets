@@ -76,57 +76,6 @@ There are two types of tests depending on what the methods try to do:
 1. Return value test: whether they produce the correct return values
 2. Side effect test: To test a method that changes the value of an instance variable
 
-#### 1.8 Class Decorators
-
-Python has a “decorator” syntax” that allows us to modify the behavior of functions or classes. 
-
-A decorator is a function that accepts a function as an argument and returns a new function. The new function is usually a “wrapped” version of the original function. 
-
-The decorator syntax is to place an @ symbol followed by the name of the decorator function on the line before the function definition. 
-
-There are two ways we can use decorators with classes: (1) by decorating individual class methods or (2) by decorating the class itself.
-
-```Python
-def addLogging(func): # The argument, func is a method of a class
-
-    def wrapper(self, x): # x is the argument that we're going to pass to func
-        print(f"About to call the method with argument {x}")
-        result = func(self, x) # actually call the method and store the result
-        print(f"Done with the method invocation with argument {x} on instance {self}. Result: {result}")
-        return result # return whatever our function returned
-
-    return wrapper # return our new function
-
-def addBeep(cls):
-    cls.beep = lambda self: print(f"{self.model} says 'Beep!'")
-    return cls
-
-@addBeep # decorating the class itself
-class Car:
-    def __init__(self, make, model, color, mileage):
-        self.make = make
-        self.model = model
-        self.color = color
-        self.mileage = mileage
-
-    @addLogging # decorating class methods
-    def drive(self, miles):
-        self.mileage += miles
-        return self.mileage
-
-    @addLogging
-    def rePaint(self, color):
-        self.color = color
-
-    def __str__(self):
-        return(f"***{self.color} {self.make} {self.model} with {self.mileage} miles***")
-
-corvette = Car("Chevrolet", "Corvette", "red", 0)
-
-corvette.drive(100)
-corvette.beep()
-```
-
 ### 2. Objects and Instances
 
 #### 2.1 Sorting list of Instances
@@ -225,3 +174,199 @@ Pet.feed(self) is equivalent to super().feed(). However it is less flexible in c
 In Python, a class can inherit from more than one parent class. This is called multiple inheritance.  
 
  It’s generally a good rule to avoid multiple inheritance unless it provides a clear and significant benefit. Always consider simpler alternatives, such as composition (using an instance of one class as an instance variable inside of another class) or single inheritance, before turning to multiple inheritance.
+
+ ### 4. Decorators
+ #### 4.1 Function Wrapping and Decorators
+
+Python has a “decorator” syntax” that allows us to modify the behavior of functions or classes. 
+
+A decorator is a function that **accepts a function as an argument and returns a new function**. The new function is usually a “wrapped” version of the original function. 
+
+The decorator syntax is to place an @ symbol followed by the name of the decorator function on the line before the function definition. 
+
+#### 4.2 Class decorators
+There are two ways we can use decorators with classes: (1) by decorating individual class methods or (2) by decorating the class itself.
+
+```Python
+def addLogging(func): # The argument, func is a method of a class
+
+    def wrapper(self, x): # x is the argument that we're going to pass to func
+        print(f"About to call the method with argument {x}")
+        result = func(self, x) # actually call the method and store the result. Need to pass self as the 1st argument as it's required when calling the method 
+        print(f"Done with the method invocation with argument {x} on instance {self}. Result: {result}")
+        return result # return whatever our function returned
+
+    return wrapper # return our new wrapped function
+
+def addBeep(cls):
+    cls.beep = lambda self: print(f"{self.model} says 'Beep!'")
+    return cls
+
+@addBeep # decorating the class itself
+class Car:
+    def __init__(self, make, model, color, mileage):
+        self.make = make
+        self.model = model
+        self.color = color
+        self.mileage = mileage
+
+    @addLogging # decorating class methods
+    # equivalent to: drive = addLogging(drive)
+    def drive(self, miles):
+        self.mileage += miles
+        return self.mileage
+
+    @addLogging
+    def rePaint(self, color):
+        self.color = color
+
+    def __str__(self):
+        return(f"***{self.color} {self.make} {self.model} with {self.mileage} miles***")
+
+corvette = Car("Chevrolet", "Corvette", "red", 0)
+
+corvette.drive(100)
+corvette.beep()
+
+```
+
+#### 4.3 Bulit-in Method Decorators
+
+**@classmethod**: 
+- used to define a method that operates on the class itself ( it takes in class as an argument) rather than an instance of the class (as we normally do with methods). This means you can use the class and its properties inside that method rather than a particular instance.
+- callable without instantiating the class, but its definition follows Sub class, not Parent class, via inheritance, can be overridden by subclass. That’s because the first argument for @classmethod function must always be cls (class).  
+- Often used as a factory method to handle preprocessing when creating an instance.
+
+**@staticmethod**: 
+- the static method decorator doesn't need to reference anything about any particular instance or about the class, although it belongs to the class. 
+- It is nothing more than a function defined inside a class. It is callable without instantiating the class first. It’s definition is immutable via inheritance.
+
+
+```Python
+class Date(object):
+    
+    def __init__(self, day=0, month=0, year=0):
+        self.day = day
+        self.month = month
+        self.year = year
+
+    @classmethod
+    def from_string(cls, date_as_string):
+        day, month, year = map(int, date_as_string.split('-'))
+        date1 = cls(day, month, year)
+        return date1
+
+    @staticmethod
+    def is_date_valid(date_as_string):
+        day, month, year = map(int, date_as_string.split('-'))
+        return day <= 31 and month <= 12 and year <= 3999
+
+date2 = Date.from_string('11-09-2012')
+is_date = Date.is_date_valid('11-09-2012')
+
+```
+
+Compared to implementing the string parsing as a single function elsewhere, classmethod allows you to encapsulate it.  
+
+
+#### 4.4 Built-in Property Decorators
+
+**@property decorator**: decorate the getter and setter functions in a class in order to have a more natural and controlled way of getting and setting the class variables. 
+
+```Python
+class Circle:
+    def __init__(self, radius): 
+        if radius<0:
+            raise ValueError("Radius must be non-negative")
+        self.__r=radius
+    @property
+    def radius(self):
+        print("Calling getter")
+        return self.__r
+    
+    @radius.setter
+    def radius(self, radius):
+        print("Calling setter")
+        if radius<0:
+            raise ValueError("Radius must be non-negative")
+        self.__r=radius
+
+c = Circle(10)
+print(c.radius)
+c.radius = -5
+print(c.radius)
+
+```
+
+### 5. Advanced Functions
+
+#### 5.1 Adding documentation to functions using Docstrings
+
+```Python
+def add(a,b):
+    """Adds two numbers together"""
+
+class Person:
+    """A class to represent a person"""
+
+# 3 ways of checking docstrings of a function/class
+print(Person.__doc__)
+help(Person)
+Person? # Jupyter notebook query only
+```
+
+#### 5.2 Dynamic positional arguments with *args
+
+- *args is a special syntax in Python that allows a function to accept a variable number of positional arguments. It is used when we want to pass any number of arguments to a function without specifying the exact number of arguments in advance.
+- When defining a function, we can use *args as a parameter. This tells Python that the function can accept any number of positional arguments.
+- Inside the function, *args is treated as a tuple that contains all the positional arguments passed to the function. We can then iterate over the *args tuple or perform any other operations on it.
+
+```Python
+def add(*args):
+    """Adds numbers together"""
+    for num in args:
+        result+=num
+    return result
+
+add(1,2,3,4)
+# Alternatively unpack a list of elements as separate arguments with *
+L = [1,2,3,4]
+add(*L)
+
+```
+#### 5.3 Dynamic keyword arguments with *kwargs
+
+- When defining a function, we can use **kwargs as a parameter. This tells Python that the function can accept any number of keyword arguments. 
+- Inside the function, *kwargs is treated as a dictionary where the keys are the argument names and the values are the corresponding values passed in.
+
+```Python
+def create_user_profile(**kwargs):
+    print(kwargs)
+    user_profile={}
+    for key, value in kwargs.items():
+        user_profile[key]=value
+    return user_profile
+
+D = {'name':'Alice', 'age':30, 'city':'Wonderland'}
+# Alternatively unpack a dictionary of key-value pairs as separate arguments with **
+create_user_profile(**D)
+
+```
+
+- One common use case of combining *args and **kwargs is in decorators so that the decorator can work with functions that have any number of arguments and keyword arguments.
+
+```Python
+def debug(func):
+    def wrapper(*args, **kwargs):
+        print("args", args)
+        print("kwargs", kwargs)
+        return func(*args, **kwargs)
+    return wrapper
+@debug
+def add(a,b,c):
+    return a+b+c
+
+add(1,2,3) 
+# output: args (1,2,3), no kwargs
+
+```
