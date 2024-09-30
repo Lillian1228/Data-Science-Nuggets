@@ -334,7 +334,7 @@ L = [1,2,3,4]
 add(*L)
 
 ```
-#### 5.3 Dynamic keyword arguments with *kwargs
+#### 5.3 Dynamic keyword arguments with **kwargs
 
 - When defining a function, we can use **kwargs as a parameter. This tells Python that the function can accept any number of keyword arguments. 
 - Inside the function, *kwargs is treated as a dictionary where the keys are the argument names and the values are the corresponding values passed in.
@@ -370,3 +370,177 @@ add(1,2,3)
 # output: args (1,2,3), no kwargs
 
 ```
+
+#### 5.4 Decorators with arguments
+
+By defining a decorator within a larger function, we can pass arguments to customize the behavior of the decorator. 
+```Python
+def repeat(n): # wrapper function for the decorator to accept additional arguments
+    def decorator(func):
+        def wrapper(*args,**kwargs):
+            for _ in range(n):
+                func(*args,**kwargs)
+            return func
+        return wrapper
+    return decorator
+
+@repeat(2) # pass in arguments (cannot pass in func here)
+def greet(name):
+    print(f"Hello,{name}")
+greet("Steve")
+print(greet)
+
+```
+
+#### 5.5 Built-in decorators in the functools module
+
+Using decorators can cause us to lose important information about the function, such as its name and docstring. To preserve this metadata, we can use the **@functools.wraps** decorator.
+
+```Python
+import functools
+
+def debug(func):
+    @functools.wraps(func)
+    def wraooer(*args, **kwargs):
+        print(f"Calling {func} with args={args} and kwargs={kwargs}")
+        return func(*args, **kwargs)
+    return wrapper
+
+@debug
+def add(a,b):
+    """Adds two numbers together"""
+    return a+b
+print(add.__name__) # output:add 
+print(add.__doc__) # output: Adds two numbers together
+
+```
+
+**@functools.cache** helps to remember the return value of a function when called with a specific argument.
+
+```Python
+import time
+@functools.cache
+def factorial(n):
+    print(f"Calculating {n}!")
+    if n==0:
+        return 1
+    return n*factorial(n-1)
+
+print(factorial(5))
+print(factorial(6)) # will only need to compute 6! thanks to cache
+```
+
+### 6. Exceptions
+
+In Python, there are three types of errors:
+
+1) Syntax Errors: These errors occur when the code violates the rules of the Python language. They are usually caused by typos, missing parentheses, or incorrect indentation. Syntax errors prevent the code from running at all.
+
+2) Runtime Errors: Also known as exceptions, these errors occur during the execution of the code. They can be caused by various factors such as dividing by zero, accessing an index out of range, or calling a function that doesn't exist. *Runtime errors can be handled using try-except blocks*.
+
+3) Logical/Semantic Errors: These errors occur when the code runs without any syntax or runtime errors, but it produces incorrect results. Logical errors are usually caused by mistakes in the algorithm or the logic of the code. Debugging techniques like print statements or using a debugger can help identify and fix logical errors.
+
+#### 6.1 Exception handling flow of control
+
+The try/except control structure provides a way to process a run-time error and continue on with program execution.
+
+The exception code can access a variable that contains information about exactly what the error was. 
+```Python
+try:
+    items = ['a', 'b']
+    third = items[2]
+    print("This won't print")
+except Exception as e:
+    print("got an error")
+    print(e)
+
+print("continuing")
+
+# Output:
+# got an error
+# list index out of range
+# continuing
+```
+
+The reason to use try/except is when you have a code block to execute that will sometimes run correctly and sometimes not, depending on conditions you can’t foresee at the time you’re writing the code. In general, when using a try-except, it's better to be as specific as possible.
+
+#### 6.2 Standard Exceptions
+
+
+All exceptions are objects. The classes that define the objects are organized in a hierarchy, which is shown below. This is important because the parent class of a set of related exceptions will catch all exception messages for itself and its child exceptions. For example, an ArithmeticError exception will catch itself and all FloatingPointError, OverflowError, and ZeroDivisionError exceptions.
+
+```Python
+BaseException
+ +-- SystemExit
+ +-- KeyboardInterrupt
+ +-- GeneratorExit
+ +-- Exception
+      +-- StopIteration
+      +-- StopAsyncIteration
+      +-- ArithmeticError
+      |    +-- FloatingPointError
+      |    +-- OverflowError
+      |    +-- ZeroDivisionError
+      +-- AssertionError
+      +-- AttributeError
+      +-- BufferError
+      +-- EOFError
+      +-- ImportError
+      +-- LookupError
+      |    +-- IndexError
+      |    +-- KeyError
+      +-- MemoryError
+      +-- NameError
+      |    +-- UnboundLocalError
+      +-- OSError
+      |    +-- BlockingIOError
+      |    +-- ChildProcessError
+      |    +-- ConnectionError
+      |    |    +-- BrokenPipeError
+      |    |    +-- ConnectionAbortedError
+      |    |    +-- ConnectionRefusedError
+      |    |    +-- ConnectionResetError
+      |    +-- FileExistsError
+      |    +-- FileNotFoundError
+      |    +-- InterruptedError
+      |    +-- IsADirectoryError
+      |    +-- NotADirectoryError
+      |    +-- PermissionError
+      |    +-- ProcessLookupError
+      |    +-- TimeoutError
+      +-- ReferenceError
+      +-- RuntimeError
+      |    +-- NotImplementedError
+      |    +-- RecursionError
+      +-- SyntaxError
+      |    +-- IndentationError
+      |         +-- TabError
+      +-- SystemError
+      +-- TypeError
+      +-- ValueError
+      |    +-- UnicodeError
+      |         +-- UnicodeDecodeError
+      |         +-- UnicodeEncodeError
+      |         +-- UnicodeTranslateError
+      +-- Warning
+           +-- DeprecationWarning
+           +-- PendingDeprecationWarning
+           +-- RuntimeWarning
+           +-- SyntaxWarning
+           +-- UserWarning
+           +-- FutureWarning
+           +-- ImportWarning
+           +-- UnicodeWarning
+           +-- BytesWarning
+           +-- ResourceWarning
+```
+
+### 7. Way of the Programmer
+#### 7.1 Debugging with Break Points
+
+The debugger tool in IDEs like VS Code and PyCharm enables you to set breakpoints and navigate through your python code step by step. 
+
+#### 7.2 Django as an example
+
+We regular Python programmers can write a short amount of code to inherit and customize classes from open-source libraries instead of building the wheels from scratch.
+
