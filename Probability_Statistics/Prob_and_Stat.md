@@ -178,3 +178,78 @@ The distribution becomes more spread and symmetrical as the number of transmissi
 2. Sampling from CDF of a continuous distribution
     ![NM](src/dist21.png) 
 
+### 3. Describing Distributions
+
+#### 3.1 Meansures of central tendency
+
+- Mean, or Expected Value, is calculated by taking the weighted average of the values of a variable, where the weights are the probabilities of each possible value. 
+
+![NM](src/w2-desc1.png) 
+
+- Median is the middle value when the data is arranged in order, and it is less affected by extreme values. 
+
+- Mode is the value that occurs most frequently in the distribution. 
+
+- Expected value of a function: 
+  ![NM](src/w2-desc2.png) 
+  - $E[aX+b] = aE[X]+b$
+  - $E[X_1+X_2]=E[X_1]+E[X_2]$
+
+#### 3.2 Measuring Spread: Variance and Standard Deviation
+
+- Deviation: $x-E[X]$  
+- Expected/Average Deviation: $E[X-E[X]]$. In the case when there are deviations in positives and negatives, they will cancel out.
+- Absolute Deviation: $|X-E[X]|$
+- Squared Deviation: $(x-E[X])^2$
+- Expected Squared Deviation, aka, Variance: $E[(X-E[X])^2]$
+  ![NM](src/w2-desc3.png) 
+  - $Var(X) = E[(X-E[X])^2] = E[X^2] - E[X]^2$
+  ![NM](src/w2-desc4.png)  
+  - $Var(aX+b) = a^2Var(X)$
+- Standard Deviation: take the squared root of the variance to measure the spread of a distribution using the same units of the distribution
+  ![NM](src/w2-desc5.png)
+  ![NM](src/w2-desc6.png) 
+- **Sum of Gaussians is still Gaussian**: in general, if you have a linear combination of variables where X and Y are both Gaussian, and both of them are independent, then the resulting variable follows a Gaussian distribution
+![NM](src/w2-desc7.png) 
+
+- Standardization: everything is nicer when the mean is 0 and the standard deviation is 1. Some benefits: 
+  1) it transforms datasets into a standard scale, making it easier to compare between different datasets. 
+  2) it simplifies statistical analysis, particularly when using techniques that assume a standard normal distribution. 
+  3) standardizing features in machine learning can improve the convergence rate of optimization algorithms and prevent some features from dominating others, leading to improved model performance.
+  ![NM](src/w2-desc8.png) 
+
+#### 3.3 Skewness and Kurtosis
+- Moments of a Distribution are statistical measures that help us understand the characteristics of a random variable.
+![NM](src/w2-desc9.png) 
+
+- Skewness: $(E[(X - μ)^3]) / (σ^3)$, using the 3rd moment of a distribution. It tells us whether the distribution is skewed to the left (negative skewness) or to the right (positive skewness). A skewness of 0 indicates a symmetric distribution.
+![NM](src/w2-desc10.png) 
+![NM](src/w2-desc11.png)
+
+- Kurtosis: $(E[(X - μ)^4]) / (σ^4)$, using the 4th moment of a distribution. measures the thickness of the tails of a distribution. It tells us whether the distribution has heavy tails (positive kurtosis) or light tails (negative kurtosis). A kurtosis of 0 indicates a distribution with tails similar to a normal distribution. 
+  ![NM](src/w2-desc12.png)
+
+#### 3.4 Visualization
+
+1. Box-Plots with quantiles
+![NM](src/w2-desc13.png)
+![NM](src/w2-desc14.png)
+To identify outliers:
+   - Calculate the **interquartile range (IQR)**, which is the difference between the third quartile (Q3) and the first quartile (Q1).
+   - Draw the whiskers of the box plot. The lower whisker extends from Q1 to Q1 - 1.5 IQR, and the upper whisker extends from Q3 to Q3 + 1.5 IQR.
+   - Any data points that fall outside the whiskers are considered outliers.
+
+2. Histograms: Histograms are a way to visualize the distribution of data for continuous variables. However, they are not a great approximation for PDFs because they are not smooth and may have discontinuities.
+
+3. **Kernel Density Estimation**: Kernel density estimation is a method to approximate the PDF of data from a histogram. To do so, 
+     - Place a small Gaussian curve (kernel) on top of each data point, with the spread determined by the value of Sigma. 
+     - Multiply each curve by one over n (the number of data points) and sum them all together. This results in a smooth function that resembles the PDF.
+     - The accuracy of the approximation depends on the number of data points. With more data points, it becomes a better representation of the PDF.
+     - The choice of Sigma allows you to control the level of smoothing in the estimated density. A smaller Sigma leads to a more detailed and localized representation, while a larger Sigma leads to a smoother and more spread-out representation.
+![NM](src/w2-desc15.png)
+
+4. Violin Plots: combination of box-plots and KDE
+![NM](src/w2-desc16.png)
+
+5. QQ Plots: using quantile-quantile plots (QQ plots), we can compare the quantiles of your data to the quantiles of a standard normal distribution.  If the data is normally distributed, the points on the QQ plot should be close to a diagonal line.
+   ![NM](src/w2-desc17.png)
