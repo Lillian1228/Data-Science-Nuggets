@@ -253,3 +253,68 @@ To identify outliers:
 
 5. QQ Plots: using quantile-quantile plots (QQ plots), we can compare the quantiles of your data to the quantiles of a standard normal distribution.  If the data is normally distributed, the points on the QQ plot should be close to a diagonal line.
    ![NM](src/w2-desc17.png)
+
+### 4. Multivariate Probability Distribution
+
+#### 4.1 Discrete and Continuous Joint Distribution
+
+![NM](src/w2-mult1.png)
+
+For independent discrete variables, the joint distribution $P_{XY}(x,y) = P(x)*P(y)$  
+
+![NM](src/w2-mult2.png)
+
+![NM](src/w2-mult3.png)
+
+#### 4.2 Marginal and Conditional Distribution
+
+Marginal distribution summarizes the behavior of one variable while ignoring the other variables. To find the marginal distribution for a specific variable, we add up the probabilities for each value of that variable.
+
+![NM](src/w2-mult4.png)
+![NM](src/w2-mult5.png)
+![NM](src/w2-mult6.png)
+
+Conditional distribution focuses on the distribution of one variable given a specific value of another variable. To find the conditional distribution, we take a slice of the dataset by fixing the value of one variable. 
+
+![NM](src/w2-mult7.png)
+![NM](src/w2-mult8.png)
+![NM](src/w2-mult9.png)
+
+#### 4.3 Covariance and Correlation
+
+Covariance measures the relationship between two random variables, while correlation measures the strength and direction of the relationship. 
+
+![NM](src/w2-mult10.png)
+
+Covariance can be calculated by centering the data and taking the average of the product of the centered coordinates:
+
+$cov(X, Y) = E[(X - E[X])(Y - E[Y])]$ , where:
+
+- cov(X, Y) represents the covariance between X and Y.
+- E[X] and E[Y] represent the expected values (means) of X and Y, respectively.
+- (X - E[X]) and (Y - E[Y]) represent the deviations of X and Y from their respective means.
+
+![NM](src/w2-mult11.png)
+
+**Covariance Matrix**: a square matrix that contains the variances of each variable on the diagonal and the covariances between variables on the off-diagonal. It is denoted by sigma and is used to represent the relationships between variables in a dataset.
+
+![NM](src/w2-mult12.png)
+
+**Correlation coefficient** is a number between -1 and 1, where -1 indicates a strong negative correlation, 1 indicates a strong positive correlation, and 0 indicates no correlation. It is calculated by dividing the covariance of the two variables by the product of their standard deviations.
+
+$r = cov(X, Y) / (σX * σY)$, where:
+
+- covariance(X, Y) is the covariance between variables X and Y,
+- σX is the standard deviation of variable X,
+- σY is the standard deviation of variable Y.
+
+#### Multivariate Gaussian Distribution
+
+![NM](src/w2-mult13.png)
+![NM](src/w2-mult14.png)
+- For univatiate, we work with scalar values and variances. For multivariate, we work with vectors and the convariance matrix.
+
+![NM](src/w2-mult15.png)
+This general expression is actually valid in the dependent case as well. The only difference is the covariance matrix is no longer diagonal, and now the off-diagonal amounts correspond to the covariances between variables.
+![NM](src/w2-mult16.png)
+![NM](src/w2-mult17.png)
