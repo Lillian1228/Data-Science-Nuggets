@@ -318,3 +318,45 @@ $r = cov(X, Y) / (σX * σY)$, where:
 This general expression is actually valid in the dependent case as well. The only difference is the covariance matrix is no longer diagonal, and now the off-diagonal amounts correspond to the covariances between variables.
 ![NM](src/w2-mult16.png)
 ![NM](src/w2-mult17.png)
+
+### 5. Sampling
+#### 5.1 Population and sample
+
+A population refers to the entire group of individuals or items that we want to study, while a sample is a smaller subset that we actually observe or measure. 
+
+![NM](src/w3-samp1.png)
+
+- We can estimate the average height of a population by taking a small sample and calculating the average height of that sample. This estimate is called the **sample mean**. A sample mean based on a larger sample size provides a better estimate of the population mean compared to a sample mean based on a smaller sample size.   
+
+- Population Proportion: The population proportion, denoted by P, is the number of items with a given characteristic divided by the total population size. 
+  
+- Sample Proportion: In cases where the population size is unknown, we can estimate the population proportion using a random sample. The sample proportion, denoted by P hat, is the number of items with a given characteristic divided by the sample size. 
+- Sample Variance: 
+![NM](src/w3-samp2.png)
+![NM](src/w3-samp3.png)
+![NM](src/w3-samp4.png)
+
+#### 5.2 Law of Large Numbers
+
+The law of large numbers states that as the sample size increases, the average of the sample will tend to get closer to the average of the entire population.
+
+![NM](src/w3-samp5.png)
+
+Certain conditions: 
+1) Sample is randomly drawn
+2) Sample size must be sufficiently large
+3) Independent observations
+
+#### 5.3 Central Limit Theorem
+
+The central limit theorem states that if we take samples from any distribution, regardless of its shape, and calculate the average of those samples, the distribution of those averages will tend to follow a normal distribution. This is a fascinating result and is considered one of the pinnacles of statistics.
+
+![NM](src/w3-samp6.png)
+
+![NM](src/w3-samp7.png)
+
+In general, a safe rule is that you usually need about 30 variables before the bell-shaped distribution comes in. It all depends on the original distribution of the data. If the original population is very skewed, then you usually need more samples than if you are working with a symmetric distribution. 
+
+As n increases, the mean stays the same, and the variance gets smaller.
+![NM](src/w3-samp8.png)
+![NM](src/w3-samp9.png)
