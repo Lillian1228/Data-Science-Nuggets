@@ -360,3 +360,89 @@ In general, a safe rule is that you usually need about 30 variables before the b
 As n increases, the mean stays the same, and the variance gets smaller.
 ![NM](src/w3-samp8.png)
 ![NM](src/w3-samp9.png)
+
+### 6. Point Estimation
+
+Point estimation provides a single value as an estimate for the unknown parameter, which simplifies the interpretation and communication of results. Two flavors of point estimators are covered here - MLE and MAP.
+
+#### 6.1 Maximum Likelihood Estimation
+
+MLE is a commonly used method in statistics and machine learning. It involves finding the parameter value that maximizes the likelihood function, which measures the probability of observing the given data. MLE provides a point estimate that is most likely to have generated the observed data.
+
+1. Motivation: This process of maximizing the conditional probability is known as maximum likelihood. In machine learning, MLE is used to estimate the probability of observing a given data set under different models, and the model with the highest probability is chosen as the most likely one.
+![NM](src/w3-point1.png)
+
+2. Bernoulli Example: 
+![NM](src/w3-point2.png)
+
+3. Gaussian Example
+![NM](src/w3-point3.png)
+
+4. MLE Math Formulation for Gaussian population
+![NM](src/w3-point4.png)
+![NM](src/w3-point5.png)
+![NM](src/w3-point6.png)
+
+- The likelihood function, denoted as L(θ | x), represents the probability of observing the given data x, assuming a specific set of parameter values θ. The MLE seeks to find the values of θ that make the observed data most probable.
+
+- Formally, the MLE can be defined as: θ_hat = argmax L(θ | x), where θ_hat represents the estimated parameter values that maximize the likelihood function.
+
+- To find the MLE, one typically takes the derivative of the likelihood function with respect to the parameters, sets it equal to zero, and solves for the parameter values that satisfy the equation. In some cases, it may be necessary to use numerical optimization techniques to find the maximum likelihood estimates.
+
+5. MLE: Linear Regression
+   - For each data point, a Gaussian distribution is centered at the point where the line intersects the horizontal line. A point is then sampled from this Gaussian distribution. 
+   - The likelihood of generating each data point is calculated using the formula of the Gaussian distribution. Since the data points are assumed to be independent, the overall likelihood is the product of the individual likelihoods.
+   - The goal is to maximize the overall likelihood, which is equivalent to minimizing the sum of squared distances between the data points and the line. This is known as the least square error.  
+  
+![NM](src/w3-point7.png)
+
+#### 6.2 Maximum a Posteriori Estimation (MAP)
+
+1. Intuition from Bayesian Statistics
+
+- Revisit example: What we actually want to maximize is not just the conditional probability, but the probability of the condition and observations happening together.
+![NM](src/w3-point10.png)
+
+- Frequentist vs. Bayesian
+![NM](src/w3-point11.png)
+
+2. Maximum a Posteriori (MAP)
+
+MAP is a Bayesian version of a point estimator. It incorporates prior knowledge or beliefs about the parameter into the estimation process. MAP combines the likelihood function with a prior probability distribution to find the parameter value that maximizes the posterior probability. It can be thought of as a regularized version of MLE, where regularization helps prevent overfitting.
+
+- Updating priors:
+![NM](src/w3-point12.png)
+![NM](src/w3-point13.png)
+When both x and y are continuous random variables, replace the probability mass function by the probability density function for both variables.
+![NM](src/w3-point14.png)
+
+3. Bernoulli Example
+![NM](src/w3-point15.png)
+![NM](src/w3-point16.png)
+
+- We assumed there's no prior beliefs about the probability the coin comes up heads so any value between 0 and 1 seems eqaully likely. Hence prior is set to 1.
+
+- The probability of observing the data you saw is some constant value that ensures the total area under the PDF is equal to 1 and hence can be ignored.
+- Uninformative priors are just constants, and just like the constant in the denominator, they don't affect the shape of the curve or the location of the maximum, so you can ignore them. The only term you're left with is the probability of the data given the model, and maximizing that probability is all MLE does.
+![NM](src/w3-point17.png)
+
+- What about an informative prior? When you want to incorporate new data, you just make your posteriors your new priors and repeat the process from before.
+![NM](src/w3-point18.png)
+
+![NM](src/w3-point19.png)
+
+#### 6.3 Relationship between MLE, MAP and Regularization
+
+1. Regularization is a technique used in machine learning to prevent overfitting and find the simplest model that fits the data well. It involves applying a penalty to more complex models to discourage their selection. 
+![NM](src/w3-point8.png)
+In the case of L2 regularization, the penalty is the sum of the squares of the coefficients of the polynomial, excluding the constant term. By adding this penalty to the loss function, we can choose a model that balances fitting the data well and generalizing to new data. 
+![NM](src/w3-point9.png)
+
+2. Bayesian approach can add penalty like regularization does
+
+![NM](src/w3-point20.png)
+![NM](src/w3-point21.png)
+
+The probability of a model， P(Model), represents the likelihood of the model being the true representation of the data, while the likelihood of a model, P(data|Model) quantifies the probability of obtaining the observed data given a specific model. For example, P(Model) can be the product of probabilities of obtaining specific coefficient values from standard normal distributions
+
+![NM](src/w3-point22.png)
