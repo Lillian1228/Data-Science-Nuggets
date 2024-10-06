@@ -446,3 +446,77 @@ In the case of L2 regularization, the penalty is the sum of the squares of the c
 The probability of a model， P(Model), represents the likelihood of the model being the true representation of the data, while the likelihood of a model, P(data|Model) quantifies the probability of obtaining the observed data given a specific model. For example, P(Model) can be the product of probabilities of obtaining specific coefficient values from standard normal distributions
 
 ![NM](src/w3-point22.png)
+
+### 7. Confidence Intervals
+
+#### 7.1 Intuition
+![NM](src/w4-CI1.png)  
+- Confidence intervals are used to estimate the true value of a parameter, such as the mean height of a population.
+- As the percentage confidence level increases, the range of values (width of the confidence interval) also increases. This is because higher confidence levels require capturing a larger proportion of the probability distribution, leading to wider intervals.  
+- The interval is constructed around a best guess of the parameter's location, with a buffer on each side to account for uncertainty.   
+- It's important to understand that there is only one true value for the parameter, and the interval represents the range of guesses that are likely to contain it.
+
+![NM](src/w4-CI2.png)  
+
+A 95% confidence interval means that if we were to repeat the process of estimating a parameter (such as the mean) from a sample many times, approximately 95% of the resulting confidence intervals would contain the true population parameter. In other words, when we calculate a 95% confidence interval, we are saying that we are 95% confident that the true parameter lies within that interval.
+
+![NM](src/w4-CI3.png)  
+
+Effect of Sample Size: Increasing the sample size at the same confidence level typically decreases the margin of error. This is because larger sample sizes provide more precise estimates of the population parameter, resulting in a smaller margin of error while maintaining the same level of confidence.
+
+![NM](src/w4-CI4.png)  
+
+#### 7.2 Constructing a confidence interval (when standard deviation is known)
+
+Central limit theorem assures us that even if we don't know the population distribution, as long as the sample size is large enough, the distribution of the sample mean will be approximately normal. This allows us to construct confidence intervals and make statistical inferences about the population mean.  
+![NM](src/w4-CI4-1.png)  
+
+- The two main ingredients of a confidence interval are the sample mean and the margin of error. 
+- The margin of error is determined by the size of the sample and the confidence level. 
+- You can calculate the margin of error by multiplying the critical value (obtained from the standard normal distribution) by the standard error. The standard error is equal to the population standard deviation divided by the square root of the sample size. 
+
+![NM](src/w4-CI5.png)  
+![NM](src/w4-CI6.png)  
+![NM](src/w4-CI7.png)  
+Up until this point, we have an estimated range of values for sample mean as below:
+![NM](src/w4-CI8.png)  
+![NM](src/w4-CI9.png)
+
+Steps to construct a CI:
+1. Collect a random sample from the population of interest.
+2. Calculate the sample mean, which is the average of the observations in the sample.
+3. Determine the desired confidence level alpha, which represents the level of certainty you want in your estimate.
+4. Find the critical value(s) from the standard normal distribution or t-distribution corresponding to the chosen confidence level.
+5. Calculate the standard error, which is the standard deviation of the sample divided by the square root of the sample size.
+6. Multiply the critical value(s) by the standard error to obtain the margin of error.
+7. Add and subtract the margin of error from the sample mean to get the lower and upper limits of the confidence interval.
+8. Interpret the confidence interval. It represents a range of values within which the population parameter (e.g., mean) is likely to fall with the chosen level of confidence.
+
+![NM](src/w4-CI10.png)
+
+Two assumptions to make the calculation valid:
+1) The sample used is random
+2) Sample size > 30, or, population is approximately normal.
+
+- Calculating minimum required sample size for a desired margin of error:
+![NM](src/w4-CI11.png)
+![NM](src/w4-CI12.png)
+
+- The population mean is either in the interval or not; it does not change (not random) or have a probability of being within the interval.
+![NM](src/w4-CI13.png)
+![NM](src/w4-CI14.png)
+
+#### 7.3 Unknown Standard Deviation
+
+In many cases, we do not know the population standard deviation. In such situations, we can use the sample standard deviation instead. This introduces the concept of the student t distribution, which is similar to the normal distribution but has fatter tails. To calculate confidence intervals when the standard deviation is unknown, we replace sigma with s (the sample standard deviation) and use the t score instead of the z score. 
+
+![NM](src/w4-CI15.png)
+![NM](src/w4-CI16.png)
+
+The t distribution is defined by the degrees of freedom, which is determined by the number of samples minus one. The larger the degrees of freedom, the closer the t distribution is to the normal distribution.
+
+![NM](src/w4-CI17.png)
+
+#### 7.4 Confidence Intervals for Proportions
+
+![NM](src/w4-CI18.png)
