@@ -417,6 +417,7 @@ When both x and y are continuous random variables, replace the probability mass 
 ![NM](src/w3-point14.png)
 
 3. Bernoulli Example
+
 ![NM](src/w3-point15.png)
 ![NM](src/w3-point16.png)
 
@@ -520,3 +521,145 @@ The t distribution is defined by the degrees of freedom, which is determined by 
 #### 7.4 Confidence Intervals for Proportions
 
 ![NM](src/w4-CI18.png)
+
+### 8. Hypothesis Testing
+
+Hypothesis testing is a way to determine if a belief about a population is likely to be true or false. The null hypothesis is the base assumption, while the alternative hypothesis is the competing statement. These hypotheses are mutually exclusive and have a true or false answer. 
+
+Null Hypothesis (H0): The null hypothesis is the default assumption or the baseline belief about the population. It states that there is no significant difference or relationship between variables, or that there is no effect or change in the population. It is often denoted as the status quo or the absence of an effect.
+
+Alternative Hypothesis (H1): The alternative hypothesis is the statement that contradicts or challenges the null hypothesis. It represents the researcher's or analyst's belief that there is a significant difference, relationship, effect, or change in the population. It is the hypothesis that the researcher is interested in proving or supporting.
+
+If there is enough evidence against the null hypothesis, it is rejected and the alternative hypothesis is accepted. However, if there is not enough evidence, the null hypothesis is not rejected, but it does not mean the null hypothesis is true. It simply means that we do not have enough evidence to support the alternative hypothesis. 
+
+![NM](src/w4-HT1.png)
+
+#### 8.1 Type I and II errors
+
+![NM](src/w4-HT2.png)
+
+- Type 1 Error: Type 1 error occurs when the null hypothesis is rejected when it is actually true. 
+- The significance level (alpha) represents the maximum probability of committing a type 1 error. 
+- Type 2 Error: occurs when the the null hypothesis is not rejected while it is actually false.
+
+![NM](src/w4-HT3.png)
+![NM](src/w4-HT4.png)
+![NM](src/w4-HT5.png)
+
+To determine the significance level, you need to decide the maximum probability of type I error you are willing to tolerate. A typical value is 0.05, which means you will consider a ham email as spam 5% of the time. Another common value is alpha equals 0.01. However, reducing the probability of type I error too much can increase the probability of type II error. 
+
+#### 8.2 Right-Tailed, Left-Tailed and Two-Tailed Tests
+
+![NM](src/w4-HT6.png)
+
+- Test Statistic: The test statistic is a value calculated from the sample data that is used to make inferences about the population. In hypothesis testing, we compare the test statistic to a critical value or calculate its probability under the null hypothesis.
+
+![NM](src/w4-HT7.png)
+![NM](src/w4-HT8.png)
+
+#### 8.3 P-Values
+
+![NM](src/w4-HT9.png)
+- The p-value is a measure of the strength of evidence against the null hypothesis. It represents the probability of observing a test statistic as extreme as, or more extreme than, the one observed, **assuming the null hypothesis is true**. 
+![NM](src/w4-HT10.png)
+
+In a right-tail test, the alternative hypothesis is that the population mean is greater than a specified value. The p-value is the probability of observing a sample mean greater than the observed value, assuming the null hypothesis is true.
+
+In a two-tailed test, the alternative hypothesis is that the population mean is different from a specified value. The p-value is the probability of observing a sample mean as extreme as, or more extreme than, the observed value in both directions, assuming the null hypothesis is true.
+![NM](src/w4-HT11.png)
+
+A small p-value indicates strong evidence against the null hypothesis. If the p-value is less than a predetermined significance level (alpha), typically 0.05, we reject the null hypothesis in favor of the alternative hypothesis. This suggests that the observed data is unlikely to occur if the null hypothesis is true.
+![NM](src/w4-HT12.png)
+
+When the p-value is less than or equal to the significance level, we reject the null hypothesis, and the probability of committing a type 1 error is equal to the p-value. When the p-value is greater than the significance level, we fail to reject the null hypothesis, and the probability of committing a type 1 error remains at the significance level.
+
+- Z-statistic is often used in hypothesis testing to determine the probability of observing a particular value or more extreme values, assuming a normal distribution.
+
+![NM](src/w4-HT13.png)
+![NM](src/w4-HT14.png)
+
+We compare the calculated Z-statistic to critical values from the standard normal distribution table. These critical values depend on the chosen significance level (α) and the type of hypothesis test (one-tailed or two-tailed).
+
+#### 8.4 Critical Values (k-value)
+- Critical values represent the most extreme sample values that would still lead to rejecting the null hypothesis. It depends on the significance level (Alpha) chosen for the test. Different significance levels result in different critical values.
+
+![NM](src/w4-HT15.png)
+
+![NM](src/w4-HT16.png)
+
+![NM](src/w4-HT17.png)
+
+The probability of type II error (failing to reject the null hypothesis when it is false) is also known as **false negative rate** or **beta** in hypothesis testing.
+
+![NM](src/w4-HT18.png)
+
+#### 8.5 Power of a Test
+
+![NM](src/w4-HT19.png)
+
+The power of the test is the probability of making the right decision and rejecting the null hypothesis when it is not true. It is complementary to the type II error probability (beta), and can be calculated for different values of the population mean in the alternative hypothesis.
+
+![NM](src/w4-HT20.png)
+
+Trade-off between type I and type II error: As the significance level (alpha) decreases, the probability of a type II error (beta) increases, vice versa. 
+
+Decreasing the significance level reduces the chances of a type I error but increases the chances of a type II error, leading to a decrease in the power of the test.
+
+![NM](src/w4-HT21.png)
+
+#### 8.6 Steps for Performing Hypothesis Testing
+
+![NM](src/w4-HT22.png)
+
+![NM](src/w4-HT23.png)
+
+#### 8.8 t-Tests when population standard deviation is unknown
+
+![NM](src/w4-T01.png)
+![NM](src/w4-T02.png)
+![NM](src/w4-T03.png)
+![NM](src/w4-T04.png)
+
+![NM](src/w4-T05.png)
+
+![NM](src/w4-T06.png)
+
+#### 8.9 Test for proportions
+
+![NM](src/w4-T07.png)
+![NM](src/w4-T08.png)
+![NM](src/w4-T09.png)
+
+#### 8.10 Two-sample t-Test for population mean
+  
+![NM](src/w4-T10.png)
+![NM](src/w4-T11.png)
+![NM](src/w4-T12.png)
+![NM](src/w4-T13.png)
+![NM](src/w4-T14.png)
+
+#### 8.11 Two-sample test for proportions
+
+![NM](src/w4-T15.png)
+![NM](src/w4-T16.png)
+![NM](src/w4-T17.png)
+
+#### 8.12 Paired t-Test
+
+ Paired t-tests are used to compare two groups that are not independent. 
+
+ ![NM](src/w4-T18.png)
+ ![NM](src/w4-T19.png)
+
+#### 8.13 A/B Testing
+
+ ![NM](src/w4-T20.png)
+![NM](src/w4-T21.png)
+![NM](src/w4-T22.png)
+![NM](src/w4-T23.png)
+![NM](src/w4-T24.png)
+![NM](src/w4-T25.png)
+![NM](src/w4-T26.png)
+
+![NM](src/quiz1.png)
+![NM](src/quiz2.png)
