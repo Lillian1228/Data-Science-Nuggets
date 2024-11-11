@@ -577,7 +577,8 @@ While chaining and linear probing methods can resolve hash collisions, they may 
   3) The number of nodes from the root to the bottommost leaf node is referred to as the maximum depth/height of the binary tree.
 
 - Perfect Binary Tree: every level is fully filled, and the entire tree resembles an equilateral triangle. Its node  count is simply $2^h - 1$, where the depth is h. 
-![eg](src/binary_tree1.png)
+
+  ![eg](src/binary_tree1.png)
 - Complete Binary Tree: all levels are fully filled except possibly the last, and all nodes are as far left as possible.
   ![eg](src/binary_tree2.png)
   - a perfect binary tree is a special case of a complete binary tree.
@@ -846,7 +847,7 @@ The characteristics of a Binary Search Tree (BST), namely, "left smaller, right 
 
 Similar to binary search, by using the "left smaller, right larger" characteristic of a BST, you can quickly locate the target node. The ideal time complexity is the height of the tree, O(logN), whereas a regular binary tree traversal function requires O(N) time to traverse all nodes.
 
-- Implementation Principles of TreeMap
+#### 5.5.1 Implementation Principles of TreeMap
 
 TreeMap has a similar structure to HashMap, both storing key-value pairs. The HashMap stores key-value pairs in a table array, while TreeMap stores key-value pairs in the nodes of a binary search tree.
 
@@ -858,13 +859,103 @@ class TreeNode:
         self.left = None
         self.right = None
 ```
-In addition to the standard methods for adding/updating (put), querying (get), deleting (remove), TreeMap structure can support many additional methods, mainly related to the size of the keys.
+In addition to the standard methods for adding/updating (put), querying (get), deleting (remove), TreeMap structure can support many additional methods, mainly related to the comparison of the keys.
 
-### 6. Graph and Breadth-First Search
+- First, the `get` method compares the target key with the current node’s key to decide whether to move left or right, which allows half of the nodes to be excluded in one go, resulting in a complexity of `O(logN)`.
+
+- As for the `put`, `remove`, and `containsKey` methods, they also use the `get` method to locate the node where the target key resides first, and then perform some pointer operations. The complexity for these operations is also `O(logN)`.
+
+- The `floorKey` and `ceilingKey` methods are used to find the maximum or minimum key that is less than or equal to / greater than or equal to a given key. The implementation of these methods is similar to that of the `get` method. The only difference is that when the target key is not found, the `get` method returns a null pointer, whereas the `ceilingKey` and `floorKey` methods return the key closest to the target key, similar to an upper or lower bound.
+
+- The `rangeKeys` method takes an input range `[low, hi]` and returns all the keys within this range. The implementation of this method leverages the properties of a BST (Binary Search Tree) to improve search efficiency:
+    - If the key of the current node is less than `low`, then the entire left subtree of the current node is also less than `low` and does not need to be searched.
+    - If the key of the current node is greater than `hi`, then the entire right subtree of the current node is greater than `hi` and also does not need to be searched.
+
+- The `firstKey` method is used to find the smallest key, and the `lastKey` method is used to find the largest key. These can be easily implemented by utilizing the left-small, right-large property of the BST:
+  - Starting from the root of the BST and continuously moving left will eventually lead to the smallest non-null node, which is the smallest key.
+  - Similarly, continuously moving right will eventually lead to the largest non-null node, which is the largest key.
+```
+    7
+   / \
+  4   9
+ / \   \
+1   5   12
+ \      /
+  2    11
+```
+
+- The `keys` method returns all keys, and the result is ordered. This takes advantage of the characteristic of BST (Binary Search Tree) in-order traversal, where the results are naturally ordered.
+
+- The `selectKey` method finds the key ranked as k (from smallest to largest, starting at 1), and the `rank` method finds the rank of the target key. For example, in the BST below, `selectKey(3)` returns 5 because 5 is the third smallest key, and `rank(9)` returns 5 because 9 is ranked fifth.
+  ```
+      7
+     / \
+    4   9
+   / \   \
+  1   5   10
+  ```
+  - One straightforward approach for `selectKey` method is to use the ordered characteristic of in-order traversal in a BST. During the in-order traversal, the k-th node encountered is the node ranked as k. However, this approach has a time complexity of `O(k)` because you need to traverse at least k nodes using in-order traversal.
+
+  - A more ingenious method is to add additional fields to the binary tree nodes to record extra information. With this modification, `selectKey` can use this `size` field to quickly exclude subtrees, achieving a complexity of `O(logN)`.
+  ```Python
+  class TreeNode:
+      def __init__(self, key: K, value: V):
+          self.key = key
+          self.value = value
+          self.size = 1
+          self.left = None
+          self.right = None
+  ```
+  ```
+      7
+     / \
+    4   9
+   / \   \
+  1   5   10
+
+  keys [1, 4, 5, 7, 9, 10]
+  rank  1  2  3  4  5  6
+  size  1  3  1  6  2  1
+  ```
+  - The `rank` method can also utilize this `size` field. For example, if you call `rank(9)` to find out the rank of node 9, the root node 7 knows that its left subtree has 3 nodes, so including itself, it accounts for 4 nodes, making its rank 4. Then, node 7 can recursively call `rank(9)` on the right subtree to find the rank of node 9 within the right subtree. Adding 4 to that result gives the rank of node 9 in the entire tree. 
+  - Of course, this increases the complexity of maintaining the tree since the `size` field needs to be updated whenever nodes are inserted or deleted.
+
+#### 5.5.2 BST Performance
+
+The previous text stated that the complexity is the depth of the tree `O(logN)` (where `N` is the total number of nodes), but this comes with a condition: the binary search tree must be "balanced," meaning that the depth difference between the left and right subtrees should not be too large. 
+
+If the search tree is unbalanced, such as in an extreme case where all nodes only have right subtrees and no left subtrees, the binary search tree essentially degenerates into a linked list. 
+```
+1
+ \
+  2
+   \
+    3
+     \
+      4
+       \
+        5
+```
+In this situation, the depth of the tree equals the number of nodes `O(N)`. Although this tree still meets the definition of a BST, its performance degrades to that of a linked list, with all complexities becoming `O(N)`.
+
+In summary, the performance of a binary search tree depends on its depth, and the depth depends on the balance of the tree. Therefore, in practical applications, `TreeMap` needs to automatically maintain the balance of the tree to avoid performance degradation.
+
+
+### 6. Graph Structure and Traversal
 
 #### 6.1 What is a Graph (network)
 
 A graph models how different things are connected to each other, such as social networks. They are made up of nodes and edges.
+
+```Python
+class Vertex:
+    def __init__(self, id: int):
+        self.id = id
+        self.neighbors = []
+```
+A graph structure is an extension of the multi-ary tree structure.
+
+In a tree structure, a parent node can only point to child nodes, and there are no child-to-parent links, nor links between sibling nodes. In contrast, a graph has fewer restrictions, allowing nodes to interconnect, forming a complex network structure.
 
 - Types of graphs
   1. A directed graph has arrows and the relationship follows the direction of the arrow. 
@@ -882,6 +973,10 @@ A graph models how different things are connected to each other, such as social 
 - Runtime Notation
   - V denotes the number of vertices (nodes)
   - E denotes the number of edges
+
+- The concept of *degree* specific to graph theory
+
+In an *undirected graph*, the degree refers to the number of edges connected to each node. Since the edges in a *directed graph* have a direction, the degree of each node in a directed graph is further divided into *indegree* and *outdegree*.
 
 - Graph Representation in data structures
   1. Adjacency Matrix: the simplest representation
@@ -904,7 +999,7 @@ A graph models how different things are connected to each other, such as social 
       graph["D"] = []
       ```
      - Pros: 
-       1) space efficient for representing sparse graphs
+       1) space efficient for representing sparse graphs： O(V+E)
        2) Iterating over all edges is efficient
      - Cons:  
        1) Less space efficient for denser graphs
@@ -914,7 +1009,46 @@ A graph models how different things are connected to each other, such as social 
 ![eg](src/graph9.png) 
      - Same pros and cons as above
 
-#### 6.2 Breadth-First Search (BFS)
+In summary, we need to analyze the space complexity of the two storage methods. For a graph with `V` nodes and `E` edges, the space complexity of an adjacency list is `O(V + E)`, while the space complexity of an adjacency matrix is `O(V^2)`.
+
+Thus, if a graph has `E` much smaller than `V^2` (a *sparse graph*), the adjacency list will save more space compared to the adjacency matrix. Conversely, if `E` is close to `V^2` (a *dense graph*), the space usage of the two will be similar.
+
+The greatest advantage of the adjacency matrix lies in its mathematical power. Some subtle properties of the graph can be revealed through sophisticated matrix operations.
+
+#### 6.2 Graph Structure Depth-First Search (DFS) and Breadth-First Search (BFS)
+
+Graph traversal is an extension of N-ary Tree Traversal. The main traversal methods are Depth-First Search (DFS) and Breadth-First Search (BFS). 
+
+**The only difference is that tree structures do not have cycles, but graph structures might, so we need to mark visited nodes to prevent infinite loops in cycles.**
+
+Specifically, when traversing all "nodes" of a graph, use a `visited` array (or hashmap) to mark nodes at the pre-order position. When traversing all "paths" of a graph, use an `onPath` array to mark nodes at the pre-order position and unmark them at the post-order position.
+
+If the problem states that the graph has no cycles, then graph traversal is exactly the same as N-ary tree traversal.
+
+#### 6.2.1 Depth First Search
+
+```Python
+class Vertex:
+    def __init__(self, id=0, neighbors=None):
+        self.id = id
+        self.neighbors = neighbors if neighbors is not None else []
+
+def traverse(root, visited):
+  # base case
+  if root is None:
+    return
+  # If a node has been visited, return. This is to prevent infinite loop
+  if visited[root.id]:
+    return
+  visited[root.id] = True
+  print("visit", root.id)
+  # pre-order position
+  for neighbor in root.neighbors:
+    traverse(neighbor, visited)
+  # post-order position
+```
+
+#### 6.3 Breadth-First Search (BFS)
 
 - Two types of questions BFS helps to answer:
   1) Is there a path from one node to another?
