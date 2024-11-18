@@ -55,3 +55,35 @@ Space complexity is measured by the height of the call stack.
 #### 4.3 Revisiting Big 0 notation
 
 In practical applications constants in Big O could matter sometimes, i.e. when input sizes are relatively small or when algorithms in comparison have similar complexity. For instance, both merge sort and quicksort have O(n*log n) time complexity, but quicksort often outperforms due to a smaller constant factor (no need for extra memory allocation in place).
+
+
+
+### Union-Find
+
+
+### 7. Weighted Graph and Dijkstra's algorithm
+
+Breadth-first search is used to calculate the shortest path for an unweighted graph. Dijkstra's algorithm is used to calculate the **shortest path for a weighted graph**.
+
+#### 7.1 What is Dijkstra's algorithm?
+
+Dijkstra's algorithm solves the shortest-path problem for any weighted, directed graph with non-negative weights.
+
+- Four steps:
+  1) Find the cheapest node you can get to at the least amount of cost
+  2) check whether there's a cheaper path to the neighbors of that node. If so, update their costs (costs for all nodes are initialized as positive infinity).
+  3) Repeat until you've done this for every node in the graph.
+  4) Calculate the final path.
+
+
+- Dijkstra's works only when all the weights are non-negative. This is to ensure that once a node has been visited, its optimal distance cannot be improved. This property is especially important to enable Dijkstra's algorithm to act in a greedy manner by always selecting the next most promising node.
+  
+- If you have negative weights, use the Bellman-Ford algorithm.
+
+- depending on how it is implemented and what data structures are used, the time complexity is typically O(E*log(V)) which is competitive against other shortest path algorithms.
+
+#### 7.2 Implementation
+
+
+
+
