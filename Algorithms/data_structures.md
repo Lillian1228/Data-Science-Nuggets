@@ -940,6 +940,228 @@ In this situation, the depth of the tree equals the number of nodes `O(N)`. Alth
 
 In summary, the performance of a binary search tree depends on its depth, and the depth depends on the balance of the tree. Therefore, in practical applications, `TreeMap` needs to automatically maintain the balance of the tree to avoid performance degradation.
 
+#### 5.6 Binary Heap and Priority Queue
+
+#### 5.6.1 What is a Heap
+
+a Heap is a special type of binary tree that meets the following criteria:
+    1) Is a complete binary tree;
+    2) The value of each node must be no greater than (or no less than) the value of its child nodes.
+
+- Two kinds of heaps: 
+
+      Max Heap: Each node in the Heap has a value no less than its child nodes. Therefore, the top element (root node) has the largest value in the Heap.
+
+      Min Heap: Each node in the Heap has a value no larger than its child nodes. Therefore, the top element (root node) has the smallest value in the Heap.
+
+  ![eg](src/heap1.png)
+
+- Heap operations
+
+Insertion/Push first happens to the bottom leftmost node to fulfil the requirement of complete binary tree. The new element then "swims"/gets swapped to the proper parent node that satisfy the heap requirements.
+
+  ![eg](src/heap2.png)
+
+Deletion/Pop means removing the “top” element from the Heap. After deleting the element, the property of Heap should remain unchanged. To do so, we:
+    1) first delete the top element
+    2) move the bottom right element to the top of the heap to construct a new complete binary tree
+    3) exchange/"sink" the top element with the smallest/largest child node until it suffice the node value requirement.
+  ![eg](src/heap3.png)
+
+#### 5.6.2 Heap Implementation with arrays
+- Why arrays instead of linked lists?
+  - Linked lists require storing node pointers which takes larger memory footprint.
+  - Push/pop can be achieved in O(1) time using arrays, compared to traversing the linked list in O(N).
+- Elements in the Heap can be stored in the array in the form of a complete binary tree.
+
+![eg](src/heap4.png)
+- Implementing "Min Heap" 
+```python
+class MinHeap:
+    def __init__(self, heapSize):
+        # Create a complete binary tree using an array
+        # Then use the binary tree to construct a Heap
+        self.heapSize = heapSize
+        # the number of elements is needed when instantiating an array
+        # heapSize records the size of the array
+        self.minheap = [0] * (heapSize + 1)
+        # realSize records the number of elements in the Heap
+        self.realSize = 0
+
+    def parent(self, index):
+    # Parent node of the newly added element
+    # Note if we use an array to represent the complete binary tree
+    # and store the root node at index 1
+    # index of the parent node of any node is [index of the node / 2]
+      return index //2
+    
+    def left(self, index):
+    # index of the left child node is [index of the node * 2]
+      return index*2
+    
+    def right(self, index):
+    # index of the right child node is [index of the node * 2 + 1]
+      return index*2+1
+    
+    def swap(self, i, j):
+      self.minheap[i], self.minheap[j] = self.minheap[j], self.minheap[i]
+
+    # Get the top element of the Heap
+    def peek(self):
+        return self.minheap[1]
+    
+    def swim(self, index):
+      # while current node is lower than parent
+      while (self.minheap[index] < self.minheap[self.parent(index)] and index > 1):
+          self.swap(self.parent(index), index)
+          index = self.parent(index)
+
+    def sink(self, index):
+      # while current node is not a leaf node
+      while (index <= self.realSize // 2):
+          # If current node is larger than the left or right child
+          # its value needs to be exchanged with the smaller value
+          # of the left and right child
+          if (self.minheap[index] > self.minheap[self.left(index)] or self.minheap[index] > self.minheap[self.right(index)]):
+              if self.minheap[self.left(index)] < self.minheap[self.right(index)]:
+                  self.swap(self.left(index), index)
+                  index = left
+              else:
+                  self.swap(self.right(index), index)
+                  index = right
+          else:
+              break
+    # Function to add an element
+    def add(self, element):
+        self.realSize += 1
+        # If the number of elements in the Heap exceeds the preset heapSize
+        # print "Added too many elements" and return
+        if self.realSize > self.heapSize:
+            print("Added too many elements!")
+            self.realSize -= 1
+            return
+        # Add the element into the array
+        self.minheap[self.realSize] = element
+        # Index of the newly added element
+        index = self.realSize
+
+        # If the newly added element is smaller than its parent node, it needs to swim to the parent node
+        self.swim(index)
+    
+    # Delete the top element of the Heap
+    def pop(self):
+        # If the number of elements in the current Heap is 0,
+        # print "Don't have any elements" and return a default value
+        if self.realSize < 1:
+            print("Don't have any element!")
+            return sys.maxsize
+        else:
+            # When there are still elements in the Heap
+            # self.realSize >= 1
+            removeElement = self.minheap[1]
+            # Put the last element in the Heap to the top of Heap
+            self.minheap[1] = self.minheap[self.realSize]
+            self.realSize -= 1
+            # sink the top element 
+            self.sink(1)
+            return removeElement
+    
+    # return the number of elements in the Heap
+    def size(self):
+        return self.realSize
+    
+    def __str__(self):
+        return str(self.minheap[1 : self.realSize + 1])
+        
+if __name__ == "__main__":
+      # Test cases
+        minHeap = MinHeap(5)
+        minHeap.add(3)
+        minHeap.add(1)
+        minHeap.add(2)
+        # [1,3,2]
+        print(minHeap)
+        # 1
+        print(minHeap.peek())
+        # 1
+        print(minHeap.pop())
+        # 2
+        print(minHeap.pop())
+        # 3
+        print(minHeap.pop())
+        minHeap.add(4)
+        minHeap.add(5)
+        # [4,5]
+        print(minHeap)
+```
+- Existing library **heapq** for leetcode problems
+
+Heapify means converting a group of data into a Heap. Its time and space complextity are both O(N).
+
+heapq doesn't directly construct a max heap. We need to multiply each element by -1.
+
+heapq uses zero-based indexing and stores the root node at 0 insteaf of the 1.
+
+```Python
+import heapq
+
+# construct a minheap with initial values, O(N)
+minHeap = [1,2,3]
+heapq.heapify(minHeap)
+
+# construct a maxheap
+maxHeap = [-x for x in minHeap]
+heapq.heapify(maxHeap)
+
+# insert an element, O(log N)
+heapq.heappush(minHeap, 5)
+heapq.heappush(maxHeap, -1*5)
+
+# get the top element, O(1)
+minHeap[0]
+-1*maxHeap[0]
+
+# delete top element, O(log N)
+heapq.heappop(minHeap)
+heapq.heappop(maxHeap)
+
+# get the length of a heap, O(1)
+len(minHeap)
+len(maxHeap)
+```
+#### 5.6.3 Applications of Heap
+
+A heap is a data structure that supports dynamic sorting. Dynamic sorting means we can continuously add or remove elements from the data structure, and it will automatically adjust the positions of the elements so that we can retrieve them in order. This is something that regular sorting algorithms cannot achieve.
+
+There are only two commonly used data structures capable of dynamic sorting:
+1. **Priority Queue** (implemented using a binary heap as the underlying structure).
+2. **Binary Search Tree**.
+
+Binary search trees are more versatile; anything a priority queue can do, a binary search tree can also handle. However, the API and implementation of a priority queue are simpler compared to a binary search tree. Therefore, for problems that can be solved with a priority queue, it is unnecessary to use a binary search tree.
+
+- What is a priority queue
+
+**Priority queue** is an abstract data type similar to a regular queue or stack data structure in which each element additionally has a "priority" associated with it. In a priority queue, an element with high priority is served before an element with low priority.
+
+A common misconception is that a Heap is the same as a Priority Queue, which is not true. **A priority queue is an abstract data type, while a Heap is a data structure. Therefore, a Heap is not a Priority Queue, but a way to implement a Priority Queue.**
+
+There are multiple ways to implement a Priority Queue, such as array and linked list. However, these implementations only guarantee O(1) time complexity for either insertion or deletion, while the other operation will have a time complexity of O(N). On the other hand, implementing the priority queue with Heap will allow both insertion and deletion to have a time complexity of O(logN).
+
+- Other applications
+
+1. Heap Sort - refer to the notes for sorting algorithms
+
+2. Top K Problem: use the heap data structure to obtain top K's largest/smallest elements.
+    - time complexity: O(K log N + N)
+    - space complexity: O(N)
+    - Solution of the Top K largest elements:
+      1. Construct a Max Heap.
+      2. Add all elements into the Max Heap.
+      3. Traversing and deleting the top element (using pop() or poll() for instance), and store the value into the result array T.
+      4. Repeat step 3 until we have removed the K largest elements.
+
+3. The K-th Element: use the heap data structure to obtain the K-th largest/smallest element.
+
 
 ### 6. Graph Structure and Traversal
 

@@ -1,4 +1,88 @@
-### 3. Recursion
+
+### 1. Foundamental Ideas
+
+- All data structures are transformations of arrays (sequential storage) and linked lists (linked storage).
+
+- The key aspects of data structures are traversal and access, which include basic operations like addition, deletion, search, and modification.
+
+- All algorithms are based on exhaustive search.
+
+- The key to exhaustive search is no omissions and no redundancies. Mastering the algorithm framework ensures no omissions; effectively utilizing information ensures no redundancies.
+
+#### 1.1 Storage Methods of Data Structures
+
+There are only two storage methods for data structures: arrays (sequential storage) and linked lists (linked storage).
+
+**Queues and stacks** can be implemented using either linked lists or arrays. Using arrays requires handling resizing issues; using linked lists avoids this but requires more memory space to store node pointers.
+
+The two storage methods for **graph structures** are adjacency lists and adjacency matrices. An adjacency list is essentially a linked list, and an adjacency matrix is a two-dimensional array. 
+
+A **hash table** maps keys into a large array using a hash function. To resolve hash collisions, the 
+chaining method employs linked list characteristics, making operations simple but requiring additional space for pointers. The linear probing method utilizes array characteristics for continuous addressing, eliminating the need for pointer storage but making operations slightly more complex.
+
+In tree structures, an array-based implementation is a "heap", as a heap is a complete binary tree. Using arrays for storage eliminates the need for node pointers, and operations are relatively simple, as seen in applications like binary heaps. More common tree structures (incomplete trees) use a linked list-based implementation.
+
+#### 1.2 Basic Operations of Data Structures
+
+For any data structure, its basic operations are simply traversal + access, which can be further detailed as: add, delete, search, and update.
+
+From a high-level perspective, there are only two forms of traversal + access for various data structures: linear and non-linear. Linear traversal is typically represented by for/while iteration, while non-linear traversal is represented by recursion. 
+
+- Array traversal
+
+```Python
+def traverse(arr: List[int]):
+    for i in range(len(arr)):
+        # iterate over arr[i]
+```
+
+- Linked list traversal
+
+```Python
+class ListNode:
+    def __init__(self, val):
+        self.val = val
+        self.next = None
+
+def traverse(head: ListNode):
+  # initialize the pointer for loop below
+  p = head
+  while p is not None:
+    # iteratively access p.val
+    p = p.next
+
+def traverse(head: ListNode):
+  # recursively access head.val
+  traverse(head.next)
+```
+
+- Binary tree traversal
+
+```Python
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+def traverse(root: TreeNode):
+  traverse(root.left)
+  traverse(root.right)
+```
+- N-ary tree traversal / Graph traversal
+
+```Python
+class TreeNode:
+    def __init__(self, val=0, children=None):
+        self.val = val
+        self.children = List[TreeNode]
+
+def traverse(root: TreeNode):
+  for child in root.children:
+    traverse(child)
+```
+
+### Recursion
 
 "Loops may achieve a performance gain for your program. Recursion may achieve a performance gain for your programmer." There's no performance benefit to using recursion. Loops are sometimes better for performance.
 
@@ -32,11 +116,7 @@ D&C works by breaking down a problem into smaller and saller pieces. There are t
 
 #### 4.1 Quicksort: an efficient sorting algorithm based on D&C
 
-- Approach: Partitioning around a pivot. 
-  - Quicksort selects a "pivot" element and partitions the array into 2 subarrays - one with elements less than the pivot and one with elements greater than the pivot. 
-  - It recursively applies this partitioning process to each subarray.
-- Time complexity: O($n*log(n)$) on average case, but can become O($n^2$) in the worst-case.
-- Pivot selection matters. Choosing a random pivot reduces the likelihood of unbalanced splits, and helps quicksort achieve the average runtime O(n*log(n)). 
+
 
 #### 4.2 Why O($n*log(n)$) for average case?
 
