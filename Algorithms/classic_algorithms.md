@@ -314,11 +314,82 @@ Deciding to do something at one step may affect the ability to do something in a
 
 In general, if the problem has constraints that cause decisions to affect other decisions, such as using one element prevents the usage of other elements, then we should consider using dynamic programming to solve the problem. 
 
+#### 5.4 Framework for DP Problems
 
+1. Define state variables: In a DP problem, a state is a set of variables that are relevant and can sufficiently describe a scenario. 
+    
+    i.e. For climbing stairs, the state variable would be the current step we are on.
 
+2. Define a function (top-down recursive approach) or data structure (bottom-up iterative approach) that will compute the answer to the problem for every given state. 
+    
+    i.e. For climbing stairs, we can have a function dp(i) or an array dp[i] to return the number of ways to climb the i-th step.
 
+3. Define a recurrence relation to transition between states. Notice the choices to make at each state and how to calculate target value under each choice.
 
+    i.e. For climbing stairs, the number of ways we can climb to the i-th step is dp(i) = dp(i-1) + dp(i-2).
 
+4. Define base cases, so that our recurrence relation doesn't go on infinitely.
+
+    i.e. what would be the answer of dp(i) without using dynamic programming when i = 0, 1, 2.
+
+```Python
+# Top down memorization implementation
+def climbStairs(n):
+  def dp(i):
+    """A function that returns the answer to the problem for a given state."""
+    if i <=2:
+      return i
+    
+    if i not in memo:
+      memo[i] = dp(i-1) + dp(i-2)
+    
+    return memo[i]
+
+  memo = {}
+  return dp(n)
+
+# Bottom up implementation
+
+def climbStairs(n):
+
+  if n == 1:
+    return 1
+  
+  dp = (n+1) *[0]
+
+  dp[1] = 1
+  dp[2] = 2
+
+  for i in range(3, n+1):
+    dp[i] = dp[i-1] + dp[i-2]
+  
+  return dp[n]
+```
+
+#### Top-down and bottom-up conversion
+![eg](src/dp3.png)
+
+#### 5.5 Multidimensional DP
+
+The dimensions of a DP algorithm refer to the number of state variables used to define each state. Typically, the more dimensions a DP problem has, the more difficult it is to solve.
+
+![eg](src/dp2.png)
+
+In problems where calculating a state is O(1), their time and space complexities are the same and directly tie to the number of states.
+
+#### 5.6 Common Patterns in dp
+
+- Iteration in the recurrence relation: Instead of choosing from a static number of options, we usually add a for-loop to iterate through a dynamic number of options and choose the best one.
+
+- State transition by inaction: if we are trying to maximize or minimize a score for example, sometimes the best option is to "do nothing", which leads to two states having the same value. The actual recurrence relation would look something like 
+dp(i, j) = max(dp(i - 1, j), ...).
+
+- State reduction: The best advice is to try and think if any of the state variables are related to each other, and if an equation can be created among them. If a problem does not require iteration, there is usually some form of state reduction possible.
+
+- Improving space complexity: Whenever you notice that values calculated by a DP algorithm are only reused a few times and then never used again, try to see if you can save on space by replacing an array with some variables. A good first step for this is to look at the recurrence relation to see what previous states are used. For example, in Fibonacci, we only refer to the previous two states, so all results before 
+n - 2 can be discarded.
+
+- Counting DP: another common class of DP problems is to ask for the number of distinct ways to do sth. With counting DP, the recurrence relation typically just sums the results of multiple states together. 
 ### Divide and Conquer (D&C)
 
 D&C works by breaking down a problem into smaller and saller pieces. There are two steps: 1) Figure out the base case. 2) Divide or decrease your problem until it becomes the base case. If you are using D&C on a list, the base case is probably an empty array or an array with one element.
