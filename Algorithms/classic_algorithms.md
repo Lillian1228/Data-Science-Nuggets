@@ -381,8 +381,14 @@ In problems where calculating a state is O(1), their time and space complexities
 
 - Iteration in the recurrence relation: Instead of choosing from a static number of options, we usually add a for-loop to iterate through a dynamic number of options and choose the best one.
 
+[300. Longest Increasing Subsequence](https://leetcode.com/problems/longest-increasing-subsequence/description/)
+
+[322. Coin Change](https://leetcode.com/problems/coin-change/description/)
+
 - State transition by inaction: if we are trying to maximize or minimize a score for example, sometimes the best option is to "do nothing", which leads to two states having the same value. The actual recurrence relation would look something like 
 dp(i, j) = max(dp(i - 1, j), ...).
+
+[188. best-time-to-buy-and-sell-stock-iv](https://leetcode.com/problems/best-time-to-buy-and-sell-stock-iv/description/)
 
 - State reduction: The best advice is to try and think if any of the state variables are related to each other, and if an equation can be created among them. If a problem does not require iteration, there is usually some form of state reduction possible.
 
@@ -390,6 +396,30 @@ dp(i, j) = max(dp(i - 1, j), ...).
 n - 2 can be discarded.
 
 - Counting DP: another common class of DP problems is to ask for the number of distinct ways to do sth. With counting DP, the recurrence relation typically just sums the results of multiple states together. 
+
+[518. Coin Change II](https://leetcode.com/problems/coin-change-ii/description/)
+
+#### 5.7 Kadane's algorithm
+
+It is used to find the maximum sum subarray given an array of numbers in O(n) time and O(1) space. Its implementation is a very simple example of dynamic programming, and the efficiency of the algorithm allows it to be a powerful tool in some DP algorithms.
+
+```Python
+# Given an input array of numbers "nums"
+def maxSubarraySum(nums):
+  best = float('-inf')
+  current = 0
+  for num in nums:
+    current = max(current + num, num)
+    best = max(best, current)
+
+  return best
+```
+
+[Best Time to Buy and Sell Stock (121)](https://leetcode.com/problems/best-time-to-buy-and-sell-stock/description/)
+
+[Maximum Subarray (53)](https://leetcode.com/problems/maximum-sum-circular-subarray/description/)
+
+
 ### Divide and Conquer (D&C)
 
 D&C works by breaking down a problem into smaller and saller pieces. There are two steps: 1) Figure out the base case. 2) Divide or decrease your problem until it becomes the base case. If you are using D&C on a list, the base case is probably an empty array or an array with one element.
