@@ -1,0 +1,7 @@
+- In Python loops, continue and pass statements serve different purposes:
+  - continue statement skips the rest of the current iteration
+  - pass is a placeholder that does nothing
+- all() function takes an iterable (e.g., a list, tuple, set, dictionary) as its argument and returns True if all elements in the iterable are true. i.e. all(x==1 for x in list)
+- using the built-in memo decorator for DP problem:
+  - from functools import cache, lru_cache
+  - @cache or @lru_cache(None)
