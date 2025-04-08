@@ -328,5 +328,34 @@ Above example shows clearly how association is not causation. The difference bet
 
 #### 3.4 Backdoor Adjustment
 
+Backdoor paths are non-directed unblocked paths from T to Y along which non-casual association flows.
 
+The graph for the interventional distribution P(Y|do(t)) is the same as the graph for the observational distribution P(Y,T,X) but with the incoming edges to T removed.
+
+We can block these backdoor paths by conditioning on a sufficient adjustment set. This is equivalent to having d-separation in the graph where edges going out of T are removed. 
+
+<img src="src/4.6_1.png" width="500">
+
+<img src="src/4.6_2.png" width="500">
+
+The 2nd statement ensures that the conditioning set W does not include colliders of T.
+
+- Proof of Backdoor Adjustment
+  
+  The backdoor criterion ensures that if we intervene on T it has no influence on W.
+
+  <img src="src/book13.png" width="500">
+  
+  <img src="src/book14.png" width="500">
+
+- Relation to the adjustment formula
+
+Recall that the adjustment formula is to identify ATE under 4 assumptions:
+![NM](src/book2.png)
+
+One key assumption - conditional exchangeability requires that $(Y(1), Y(0))\perp\kern-5pt\perp T | X$. However we had no way of knowing how to choose X or knowing that X actually gives us conditional exchangeability. 
+
+**Using graphical causal models, we know how to choose a valid X: we simply choose X sothat it satisfies the backdoor criterion.** Then, under the assumptions encoded in the causal graph, conditional exchangeability provably holds; the causal effect is provably identifiable.
+
+#### 3.5 Structural Causal Models (SCMs)
 
