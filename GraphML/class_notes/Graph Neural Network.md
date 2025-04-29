@@ -213,17 +213,283 @@ CNN can be seen as a special GNN with fixed neighbor size and ordering:
 
 #### 2.2.1 A General Perspective on GNNs
 
+A General GNN Framework: 
+
+
+1. GNN Layer = Message + Aggregation
+    - Different instantiations under this perspective
+    - GCN, GraphSAGE, GAT, ...
+
+2. Layer connectivity: Connect GNN layers into a GNN
+    - Stack layers sequentially
+    - Ways of adding skip connections
+
+3. Graph augmentation: raw input graph != computational graph
+    - Graph feature augmentation
+    - Graph structure augmentation
+
+4. Learning objective: How do we train a GNN
+    - Supervised/Unsupervised objectives
+    - node/Edge/Graph level objectives
+
+<img src="src/2.2.1.png" width="500">
+
 #### 2.2.2 Designing a Single Layer of a GNN
+
+Idea of a GNN Layer:
+- Compress a set of vectors into a single vector
+- Two step process: Message + Aggregation
+
+<img src="src/2.2.2.png" width="400"> 
+
+- Message Computation
+
+    Intuition: Each node will create a message, which will be sent to other nodes later.
+
+    <img src="src/2.2.3.png" width="400"> 
+
+    Example: A linear layer $m^{(l)}_u=W^{(l)}h^{(l-1)}_u$. This is to multiply node features with weight matrix $W^{(l)}$.
+
+- Aggregation
+
+    Intuition: Each node will aggregate the messages from node $v$'s neighbors
+
+    <img src="src/2.2.4.png" width="300">
+
+    Example: Sum, Mean, or Max aggregator
+    - $h^{(l)}_v=Sum({m^{(l)}_u,u \in N(v)})$
+
+    Issue: Info from node $v$ itself could get lost.
+    - Computatin of $h^{(l)}_v$ does not directly depend on $h^{(l-1)}_v$
+    - **Solution: Include $h^{(l-1)}_v$ when computing $h^{(l)}_v$**
+
+    <img src="src/2.2.5.png" width="500">
+
+- Putting things together
+
+    <img src="src/2.2.6.png" width="500">
+
+- Classical GNN Layers: GCN
+
+    <img src="src/2.2.99.png" width="300">
+    <img src="src/2.2.98.png" width="500">
+
+- Classical GNN Layers: GraphSAGE
+
+    <img src="src/2.2.97.png" width="500">
+
+    Message is computed within the AGG()
+
+    Two-stage aggregation:
+    1. Aggregate from node neighbors: $h^{(l)}_{n(v)}=AGG({h^{(l-1)}_u, u \in N(v)})$
+    2. Further aggregate over the node itself: $h^{(l)}_v=\sigma(W{(l)} \cdot CONCAT(h^{(l-1)}_v, h^{(l)}_{N(v)}))$
+   
+   Neighbor Aggregation Methods:
+   - Mean: Take a weighted average of neighbors
+  
+        <img src="src/2.2.96.png" width="400">    
+
+   - Pool: Transform neighbor vectors and apply symmetric vector function Mean or Max
+  
+        <img src="src/2.2.95.png" width="400"> 
+
+    - LSTM: Apply LSTM to reshuffled of neighbors
+
+        <img src="src/2.2.94.png" width="400"> 
+
+    L2 Normalization: optionally, apply L2 normalization to $h^{(l)}_v$ at every layer
+
+    <img src="src/2.2.93.png" width="400">
+
+    - Without $l_2$ normalization, the embedding vectors have different scales ($l_2$-norm) for vectors
+    - In some cases (not always), normalization of embedding results in performance improvement
+    - After $l_2$ normalization, all vectors will have the same $l_2$-norm.
+
+- Classical GNN Layers: Graph Attention Networks (GAT)
+
+    <img src="src/2.2.92.png" width="300">
+
+    In GCN/GraphSAGE, $\alpha_{vu}=1/|N(v)|$ is the weighting factor (importance) of node $u$'s message to node $v$.
+    - $\alpha_{vu}$ is defined explicitly based on the structural properties of the graph (node degree)
+    - All neighbors $u \in N(v)$ are equally important to node $v$
+  
+    Can we do better than simple neighborhood aggregation? 
+    
+    -> GAT however assumes not all node's neighbors are equally important.
+    - Attention is inspired by cognitive attention. The attention $\alpha_{vu}$ focuses on the important parts of the input data and fades out the rest.
+    - Idea: the NN should devote more computing power on that small but important part of the data
+    - Which part of the data is more important depends on the context and is learned through training.
+  
+    Can we let weighting factors $\alpha_{vu}$ to be learned?
+    - Idea: Compute embedding $h^{(l)}_v$ of each node in the graph following an **attention strategy**:
+      - Nodes attend over their neighborhoods' message
+      - Implicitly specify different weights to different nodes in a neighborhood
+    
+    Attention Mechanism:
+    - Let $\alpha_{vu}$ be computed as a byproduct of an attention mechanism $\alpha$
+    - $\alpha$ computes attention coefficients $e_{vu}$ across pairs of nodes $u, v$ based on their messages:
+  
+        <img src="src/2.2.91.png" width="400">  
+
+    - Normalize $e_{vu}$ into the **final attention weight $\alpha_{vu}$**
+
+        <img src="src/2.2.90.png" width="400">  
+
+    - Weighted sum based on the final attention weight $\alpha_{vu}$
+
+        <img src="src/2.2.89.png" width="500"> 
+    
+    What is the form of attention mechanism $\alpha$?
+
+    - This approach is agnostic to the choice of $\alpha$.
+
+        <img src="src/2.2.88.png" width="500">  
+    
+    - Parameters of $\alpha$ are trained jointly: learn the param together with weight matrices (i.e. other param of the NN $W^{(l)}$) in an end-to-end fashion.
+
+    **Multi-head attention**: Stabilize the learning process of attention mechanism.
+    - Create multiple attention scores (each replica with a different set of parameters):
+
+        <img src="src/2.2.87.png" width="300">   
+    
+    - Outputs are aggregated by concatenation or summation: $h^{(l)}_v=AGG(h^{(l)}_v[1], h^{(l)}_v[2], h^{(l)}_v[3])$
+  
+    Benefits of Attention Mechanism:
+
+    - Key benefit: Allows for (implicitly) specifying different importance values ($\alpha_{vu}$) to different neighbors
+    - Computationally efficient:
+      - Computation of attentional coefficients can be parallelized across all edges of the graph
+      - Aggregation may be parallelized across all nodes
+    - Storage efficient:
+      - Sparse matrix operations do not require more than $O(V + E)$ entries to be stored
+      - Fixed number of parameters, irrespective of graph size
+    - Localized:
+      - Only attends over local network neighborhoods
+    - Inductive capability:
+      - It is a shared edge-wise mechanism
+      - It does not depend on the global graph structure
+  
+    GAT Example: Cora Citation Net
+
+    <img src="src/2.2.86.png" width="500">
+
+- GNN Layer in Practice
+
+    In practice, these classic GNN layers are a great starting point. We can often get better performance by considering a general GNN layer design. Concretely, we can include **modern deep learning modules** that proved to be useful in many domains.
+
+    Many modern deep learning modules can be incorporated into a GNN layer:
+
+    <img src="src/2.2.85.png" width="500"> 
+
+  Batch Normalization:
+  - Goal: Stabilize neural networks training
+  - Idea: Given a batch of inputs (node embeddings)
+    - Re-center the node embeddings into zero mean
+    - Re-scale the variance into unit variance
+
+  <img src="src/2.2.84.png" width="500"> 
+
+   Dropout:
+   - Goal: Regularize a NN to prevent overfitting
+   - Idea:
+     - During training: with some probability p, randomly set neurons to ero (turn off)
+     - During testing: Use all the neurons for computation
+
+    - In GNN, dropout is applied to the linear layer in the message function
+  
+  <img src="src/2.2.83.png" width="400">  
+
+    Activation (Non-linearity):
+
+  <img src="src/2.2.82.png" width="500">  
+
+    Summary: 
+    - Modern DL modules can be included into a GNN layer for better performance.
+    - Designing novel GNN layers is still an active research frontier.
+    - Suggested resources: You can explore diverse GNN designs or try out your own ideas in [GraphGym](https://github.com/snap-stanford/GraphGym)
 
 #### 2.2.3 Stacking Layers of a GNN
 
+The Standard way: Stacking GNN layers sequentially
 
+Input: Initial raw node features $X_v$
 
+Output: Node embeddings $h^{(l)}_v$ after L GNN layers
 
+- The Over-smoothing Problem: When stacking many GNN layers, all the node embeddings converge to the same value. This is bad because we want to use node embeddings o differentiate nodes.
+
+- Receptive Field of a GNN: 
+  - Receptive field: The set of nodes that determine the embedding of a node of interest
+  - In a K-layer GNN, each node has a receptive field of K-hop neighborhood.
+
+  <img src="src/2.2.81.png" width="500">
+
+  - Receptive field overlaps for two nodes: The shared neighbors quickly grows when we increase the number of hops.   
+
+- Why does over-smoothing happen?
+
+    - We knew the embedding of a node is determined by its receptive field. If two nodes have highly-overlapped receptive fields, then their embeddings are highly similar.
+    - Stack many GNN layers -> nodes will have highly overlapped receptive fields -> node embeddings will be highly similar -> suffer from the oversmoothing problem
+
+- Design GNN Layer Connectivity
+
+    Lession 1: Be cautious when adding GNN layers
+    - Unlike neural networks in other domains (CNN for image classification), adding more GNN layers do not always help.
+    - Step 1: Analyze the necessary receptive field to solve your problem, i.e. by computing the diameter of the graph
+    - Step 2: Set number of GNN layesr L to be a bit more than the receptive field we like. **Don't set L to be unecessarily large!**
+  
+    How to make a shallow GNN more expressive?
+    - Solution 1: increase the expressive power within each GNN layer.
+      - In our previous examples, each transformation or aggregation function only include one linear layer.
+      - We can make them be deep neural network.
+
+      <img src="src/2.2.80.png" width="400"> 
+    - Solution 2: Add layers that do not pass messages
+      - A GNN doesn't necessarily only contain GNN layers. i.e. we can add MLPlayers (applied to each node) before and after GNN layers, as pre-process and post-process layers.
+
+      <img src="src/2.2.79.png" width="500"> 
+
+    Lesson 2: In cases your problem still requires many GNN layers, add **skip connections** in GNNs
+    - From over-smoothing observation, node embeddings in earlier GNN layers sometimes can better differentiate nodes.
+    - Solution: We can increase the impact of earlier layers on the final node embeddings **by adding shortcuts in GNN**.
+
+      <img src="src/2.2.78.png" width="500"> 
+
+    - Why does skip connections work?
+      - Intuition: it creates a mixture of models
+      - N skip connections leads to $2^N$ possible paths. Each path could have up to N modules.
+      - We automatically get **a mixture of shallow GNNs and deep GNNs**.
+
+      <img src="src/2.2.77.png" width="500">  
+
+    - Example: GCN with Skip Connections
+
+      <img src="src/2.2.76.png" width="500">  
+
+    - Other Options of Skip Connections
+      - Directly skip to the last layer. The final layer directly aggregates from all the node embeddings in the previous layers.
+
+      <img src="src/2.2.75.png" width="200">       
+ 
 
 ### 2.3 GNN Training Pipeline
 
 #### 2.3.1 Graph Augmentation for GNNs
+
+- Why Augment Graphs?
+
+    Our assumption so far has been raw input graph = computational graph. However, therea re reasons for breaking this assumption:
+    - Features: the input graph lacks features
+    - Graph structure:
+      - too sparse -> inefficient message passing
+      - too dense -> message passing is too costly
+      - too large -> cannot fit the computational graph into a GPU
+  
+    It's unlikely that the input graph happens to be the optimal copmutation graph for embeddings.
+
+- Graph Augmentation Approaches
+
+
 
 #### 2.3.2 Training GNNs
 
