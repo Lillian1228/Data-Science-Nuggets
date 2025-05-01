@@ -20,6 +20,7 @@
     **ENC(v) = multiple layers of non-linear transformations based on graph structure.**
 
     Note: all the deep encoders can be combined with node similarity functions defined in the Lecture 3.
+
     <img src="src/2.1.2.png" width="400"> 
 
     Tasks on Networks:
@@ -478,7 +479,7 @@ Output: Node embeddings $h^{(l)}_v$ after L GNN layers
 
 - Why Augment Graphs?
 
-    Our assumption so far has been raw input graph = computational graph. However, therea re reasons for breaking this assumption:
+    Our assumption so far has been raw input graph = computational graph. However, there're reasons for breaking this assumption:
     - Features: the input graph lacks features
     - Graph structure:
       - too sparse -> inefficient message passing
@@ -489,9 +490,290 @@ Output: Node embeddings $h^{(l)}_v$ after L GNN layers
 
 - Graph Augmentation Approaches
 
+  - Input graph lacks features -> feature augmentation
+  - Graph Structure augmentation:
+    - too sparse -> Add virtual nodes/edges
+    - too dense -> Sample neighbors when doing message passing
+    - too large -> Sample subgraphs to compute embeddings
 
+- Feature Augmentation on Graphs
+
+  Why do so? 
+  
+  Reason 1: Input graph does not have node  features. This is common when we only have the adjacency matrix.
+
+  Standard approaches:
+  1. Assign constant values to nodes
+  2. Assign unique IDs to nodes. These IDs are converted into one-hot vectors.
+   
+      <img src="src/2.2.7.png" width="400">    
+
+    <img src="src/2.2.8.png" width="500">   
+
+  Reason 2: Certain structures are  hard to learn by GNN.
+  
+  i.e. Cycle count feature:
+  - Can GNN learn the length of a cycle that $v_1$ resides in?
+  - Unfortunately no.
+  - $v_1$ cannot differentiate which graph it resides in, because all the ndes in the graph have degree of 2.
+  - The computational graphs will be the same binary tree.
+
+  <img src="src/2.2.9.png" width="500"> 
+
+  Solution: We can use cycle count as augmented node features.
+
+  <img src="src/2.2.10.png" width="500"> 
+
+  Other commonly used augmented features:
+  - node degree
+  - clustering coefficient
+  - pagerank
+  - centrality
+  - ...
+
+- Add Virtual Nodes/Edges for sparse graphs
+
+  1. Add virtual edges
+
+       - Common approach: Connect 2-hop neighbors via virtual edges
+       - Intuition: Instead of using adj. matrix A for GNN computation, use $A+A^2$
+       - Use cases: Bipartite graphs i.e. author-to-papers. 2-hop virtual edges make an author-author collaboration graph.
+
+  2. Add virtual nodes
+
+      The virtual node connects to all the nodes in the graph
+      - Suppose in a sparse graph two nodes have shortest path distance of 10
+      - After adding the virtual nodes, all the nodes will have a distance of 2.
+
+      Benefit: Greatly improves message passing in sparse graphs
+
+- Node Neighborhood Sampling for dense graphs
+
+  Previously, all the nodes are used for message passing.
+
+  New idea: Randomly sample a node's neighborhood for message passing.
+    - i.e. we can randomly choose 2 neighbors to pass messages in a given layer. 
+
+      <img src="src/2.2.11.png" width="400">
+
+    - In expectation, we get embeddings similar to the case whre all the neighbors are used.
+
+  Benefits: Greatly reduces computational costs; allows for scaling to large graphs. In practice it works great. 
 
 #### 2.3.2 Training GNNs
 
+GNN Training Pipeline:
+
+<img src="src/2.3.1.png" width="500">
+
+GNN Prediction Heads: different task levels (node/edge/graph) require different prediction heads.
+
+- Node-level Prediction: We can directly make prediction using node embeddings!
+
+  After GNN computation, we have d-dim node embeddings: ${h^{(L)}_v∈ℝ^d,∀v∈G}$
+
+  Suppose we want to make k-way prediction:
+  - Classification: classify among k categories
+  - Regression: regress on k targets
+
+  <img src="src/2.3.2.png" width="400">
+
+- Edge-level prediction: Make prediction using pairs of node embeddings 
+
+  Suppose we want to make k-way prediction:
+
+  - $\hat{y}_{uv}=Head_{edge}(h^{(L)}_u, h^{(L)}_v)$
+  
+  What are the options for $Head_{edge}(h^{(L)}_u, h^{(L)}_v)$?
+
+  1. Concatenation + Linear: we have seen this in graph attention
+
+     - $\hat{y}_{uv}=Linear(Concat(h^{(L)}_u, h^{(L)}_v))$ 
+  
+      Here Linear() will map 2d-dimensional embeddings (since we concatenated embeddings) to k-dim embeddings (k-way prediction)  
+
+      <img src="src/2.3.3.png" width="300"> 
+
+  2. Dot product: 
+       - $\hat{y}_{uv}=(h^{(L)}_u)^Th^{(L)}_v$
+       - this approach only applies to 1-way prediction, i.e. link prediction - predicting the existence of an edge.  
+       - Applying to k-way prediction:
+
+      <img src="src/2.3.4.png" width="400">   
+
+- Graph-level prediction: Make prediction using all the node embeddings in our graph
+
+    - $\hat{y}_{G}=Head_{graph}({h^{(L)}_v∈ℝ^d,∀v∈G})$
+    - $Head_{graph}$ is similar to AGG() in a GNN layer!
+    - These options work great for small graphs:
+      - Global mean pooling: $\hat{y}_{G}=Mean({h^{(L)}_v∈ℝ^d,∀v∈G})$
+      - Global max pooling: $\hat{y}_{G}=Max({h^{(L)}_v∈ℝ^d,∀v∈G})$
+      - Global sm pooling: $\hat{y}_{G}=Sum({h^{(L)}_v∈ℝ^d,∀v∈G})$
+
+    - Issue: Global pooling over a large graph will lose info.
+
+      Toy example: we use 1-dim node embeddings
+      - Node embeddings for G1: {−1,−2, 0, 1, 2}
+      - Node embeddings for G2: {−10,−20, 0, 10, 20}
+      - Clearly G1 and G2 have very different node embeddings. Their strucutres should be different.
+      - If we do glbal sum pooling: $\hat{y}_{G1}=0$, $\hat{y}_{G2}=0$ -> Wr cannot differentiate them!
+
+    - Solution: Hierarchical Global Pooling (aggregate all the node embeddings hierarchically)
+
+      Toy example: we will aggregate via ReLu(Sum())
+      - First separately aggregate the first 2 nodes and last 3 nodes
+      - Aggregate again to make the final prediciton
+
+      <img src="src/2.3.5.png" width="400"> 
+
+    - Hierarchical Pooling in Practice: **DiffPool idea**
+
+      - Hierarchically pool node embeddings
+
+      <img src="src/2.3.6.png" width="500">  
+
+      - Leverage 2 independent GNNs at each level
+        - GNN A: Compute node embeddings
+        - GNN B: Compute the cluster that a node belongs to
+      - For each pooling layer
+        - Use clustering assignments from GNN B to aggregate node embeddings generated by GNN A
+        - Create a single new node for each cluster, maintaining edges between clusters to generate a new pooled network
+      - GNNs Aand B at each level can be executed in parallel
+      - Jointly train GNN A and B
+
+- Where does ground truth come from: supervised labels vs unsupervised signals
+
+  - Supervised learning: labels come from external sources.
+    - Node labels $y_v$: in a citation network, which subject area does a node belong to.
+    - Edge labels $y_{uv}$: in a transaction network, whether an edge is fraudulent
+    - Graph labels $y_G$: among molecular graphs, the drug likeness of graphs
+
+    Advice: Reduce your ask to node/edge/graph labels, since they are easy to work with. e.g. we knew some nodes form a cluster. We can treat the cluster that a node belongs to as a node label.
+  - Unsupervised learning: Signals come from graphs themselves
+    - Sometimes we only have a graph, without any external labels
+    - The solution: self-supervised learning. Find supervision signals within the graph. i.e.
+      - Node-level $y_v$: node statistics such as clustering coefficient, PageRank, ...
+      - Edge-level $y_{uv}$: link prediction - hide the edge between two nodes and predict if there should be a link.
+      - Graph labels $y_G$: graph statistics i.e. predict if two graphs are isomorphic
+
+- How do we compute the final loss?
+
+  Settings for GNN Training: 
+  - we have N data points, each data point can be a node/edge/graph.
+  - We wil use prediction $\hat y^{(i)}$ and label $y{(i)}$ to refer predicitons at all levels
+
+  Classificaiton Loss:
+  - Cross Entropy (CE): very common loss function in classification
+  - K-way prediciton for i-th data point:
+
+    <img src="src/2.3.7.png" width="500">   
+
+  Regression Loss:
+  - We often use Mean Squared Error (MSE) a.k.a. L2 loss
+  - K-way regression for data point (i):
+
+    <img src="src/2.3.8.png" width="500">   
+
+- How do we measure the success of a GNN?
+
+  Evaluation Metrics: Regression
+  - Root mean square error (RMSE): <img src="src/2.3.9.png" width="150">
+  - Mean absolute error (MAE):  <img src="src/2.3.10.png" width="150">
+
+  Evaluation Metrics: Classification
+  - Multi-class classification: we simply report the accuracy
+
+    $1[argmax(\hat y^{(i)})=y^{(i)}]/N$
+  - Binary classification
+    - Metrics sensitive to classification threshold
+      - Accuracy
+      - Precision/Recall
+      - If the range of prediciton is [0,1] we will use 0.5 as threshold
+
+      <img src="src/2.3.11.png" width="400"> 
+
+    - Metrics Agnostic to threshold
+      - ROC AUC: area under the ROC curve. The probability that a classifier will rank a randomly chosen positive instance higher than a randomly chosen negative one.
+
+      ROC Curve: captures the tradeoff in TPR and FPR as the classification threshold is varied for a binary classifier.
+
+      <img src="src/2.3.12.png" width="400">      
+
 
 #### 2.3.3 Setting up GNN Prediction Tasks
+
+- How do we split our dataset into train/validation/test?
+
+  - Fixed Split: split the dataset once
+    - Training set: used for optimizing GNN parameters
+    - Validation set: develop model/hyperparameters
+    - Test set: held out until we report final performance
+
+  - Random split: we will randomly split our dataset into training/validation/test, and report average performance over different random seeds.
+- Why Splitting a graph dataset is special
+    - data points are not independent. i.e. nodes will participate in message passing and affect other connected nodes' embedding.
+    - Solution 1 - Transductive setting: training / validation / test
+sets are on the same graph.
+
+      - Input graph can be observed in all the dataset splits. We will **only split the (node) labels**. Only applicable to node/edge prediction tasks.
+      - At training time, we compute embeddings using the entire graph and train using node 1&2's labels
+      - At validation time, we compute embeddings using the entire graph, and evaluate on node 3&4's labels.
+      - 
+
+      <img src="src/2.3.13.png" width="300">  
+
+    - Solution 2 - Inductive setting: training / validation / test sets
+are on different graphs.
+      - Break the edges between splits to get multiple graphs. applicable to node/edge/graph tasks.
+      - Now we have 3 graphs that are independent.
+      - At training time, compute embeddings using the graph over node 1&2, and train using their labels
+      - At validation time, compute embeddings using the graph over node 3&4, and evaluate on node 3&4's labels
+
+      <img src="src/2.3.14.png" width="300">  
+
+- Data Split Examples
+  
+  - Graph Classification 
+  
+    Only the inductive setting is well defined for graph classification, because we have to test on unseen graphs.
+
+  - Link Prediction
+
+    Link prediction is an unsupervised / self-supervised task. We need to create the labels and dataset splits on our own.
+
+    Concretely, we need to hide some edges from the GNN and the let the GNN predict if the edges exist.
+
+    We will split edges twice:
+    1. Assign 2 types of edges in the original graph
+         - Message edges: used for GNN message passing
+        - Supervision edges: use for computing objectives
+
+        After step 1 only message edges will remain in the graph. Supervision edges are used as supervision for edge predictions made by the model and will not be fed into GNN.
+
+     2. Split edges into train / validation / test
+
+        Option 1: Inductive link prediciton split
+        - Suppose we have a dataset of 3 graphs. Each inductive split will contain an independent graph
+        - In train or val or test set, each graph will have 2 types of edges: message + supervision edges
+
+        <img src="src/2.3.15.png" width="500">  
+
+        Option 2: Transductive link prediction split (usually default setting)
+        - Suppose we have a dataset of 1 graph. By definition of “transductive”, the entire graph can be observed in all dataset splits
+        - But since edges are both part of graph structure and the supervision, we need to hold out validation / test edges.
+        - To train the training set, we further need to hold out supervision edges for the training set
+
+        <img src="src/2.3.16.png" width="500">  
+
+        Why do we use growing number of edges?
+        - After training, supervision edges are known to GNN. Therefore, an ideal model should use supervision edges in message passing at validation time. The same applies to the test time.
+
+        <img src="src/2.3.17.png" width="500">  
+
+        Note: Link prediction settings are tricky and complex. You may find papers do link prediction differently. But if you follow our reasoning steps, this should be the right way to implement link prediction.
+
+        Luckily, we have full support in [DeepSNAP](https://github.com/snap-stanford/deepsnap) and [GraphGym](https://github.com/snap-stanford/GraphGym)
+
+GNN Trainig Pipeline:
+
+<img src="src/2.3.18.png" width="500"> 
