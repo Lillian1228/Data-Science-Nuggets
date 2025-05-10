@@ -122,3 +122,167 @@ Correct & Smooth (C&S) is a recent state of the art node classification method. 
 
 C&S Motivations:
 
+||Label Propagation| GNN |
+|-|-|-|
+|Modeling assumption|connected nodes have similar labels|labels only depend on neighbor features|
+|Reason why works| homophily a.k.a. associativity| these neighbor features are sometimes very informative|
+|Efficiency| FAST: few sparse matrix-vector products | SLOW: many parameters, irregular computation|
+|Improvement|Why not use additional info or features? | Why not assume labels are correlated?|
+
+#### GNNs make uncorrelated predictions
+
+It uses labels to train the weights of a model. Given a trained model, predictions for different nodes are independent/uncorrelated. In contrast, LP directly uses the labels in predictions.
+
+  <img src="src/L4/4.1.10.png" width="500">  
+
+  <img src="src/L4/4.1.11.png" width="500">  
+
+1. Form local neighborhoods.
+2. Combine features to get a representation $h_v$ at node 𝑣.
+3. Predict outcome given representation (learn params with train data).
+
+**If node features are overwhelmingly predictive**, making uncorrelated predictions for each node is OK.
+
+Uncorrelated GNN predictions can be **catastrophic in simple cases when features are only mildly predictive**.
+
+  <img src="src/L4/4.1.12.png" width="500">   
+
+- Big problem! Features are no longer super predictive.
+- LP (ignoring features) would work much better.
+
+#### Correct & Smooth
+
+Setting: A partially labeled graph and features over nodes.
+
+3-step procedure:
+1. Train base predictor that predict soft labels over all nodes
+  
+    Labeled nodes are used for training/validation data
+
+    Base predictor can be simple: Linear model/Multi-layer-perceptron (MLP) over node features, or a full GNN.
+  
+    <img src="src/L4/4.1.13.png" width="500">  
+
+2. Use the base predictor to predict soft labels (class probabilities) of all nodes
+
+    We expect these soft labels to be decently accurate.
+
+    <img src="src/L4/4.1.14.png" width="300">  
+
+3. **Post-process the soft predictions using graph structure** to obtain the final predictions of all nodes
+
+    Correct Step:
+    - Intuition: The degree of the errors of the soft labels are biased. We need to correct for the error bias.
+
+      <img src="src/L4/4.1.15.png" width="300"> 
+
+    - Key idea: we expect **errors in the base prediction to be positively correlated along edges** in the graph. In other words, an error at node
+𝑢 increases the chance of a similar error at neighbors of 𝑢. Thus, we should “spread” such uncertainty over the graph.  
+      
+    - Computation Procedure:
+    1) Compute training errors of nodes: ground-truth label minus soft label. Defined as 0 for unlabeled nodes.
+      
+        <img src="src/L4/4.1.17.png" width="400"> 
+      
+    2) Obtain **Normalized diffusion matrix &Atilde; $=D^{-1/2}AD^{-1/2}$**
+        
+        Let $A$ be the adjacency matrix, &Atilde; be the diffusion matrix.
+     
+        - Add self-loop to the adjacency matrix A, i.e. $A_{ii} = 1$ 
+        - Let $D=Diag(d_1, ..., d_N)$ be the degree matrix.
+      
+        <img src="src/L4/4.1.19.png" width="400">  
+
+        Theoretical Motivation for &Atilde;:
+        - All the eigenvalues &lambda;'s are in the range of [-1,1].
+        - The largest eigenvalue is always 1.
+        - Output of &Atilde;x (i.e. in error diffusion) is normalized.
+
+        Intuitions for &Atilde;:
+        - If i and j are connected, the weight &Atilde;$_{ij}$ is $1/$&radic;$d_i$&radic;$d_j$.
+        - Large if i and j are connected only with each other
+        - Small if i and j are connected also connected with many other nodes.
+
+      3) Diffuse training errors $E^{(0)}$ along the edges:
+
+           $E^{(t+1)}$ &larr; $(1-a)$ &sdot; $E^{(t)}+a$ &sdot; &Atilde; $E^{(t)}$
+
+           Assmuption: Prediction erros are similar for nearby nodes.
+
+           <img src="src/L4/4.1.18.png" width="500"> 
+
+           <img src="src/L4/4.1.20.png" width="500">
+        
+      4) Add the scaled diffused training errors into the predicted soft labels
+
+          <img src="src/L4/4.1.21.png" width="500">     
+
+    Smooth Step:
+    - Intuition: The predicted soft labels may not be smooth over the graph. We need to smoothen the soft labels.
+
+      <img src="src/L4/4.1.16.png" width="300">  
+
+      Note: for training nodes, we use the ground-truth hard labels instead of the soft labels.
+    - Computation Procedure
+      - Diffuse label $Z^{(0)}$ along the graph structure
+
+      <img src="src/L4/4.1.22.png" width="500">
+
+      <img src="src/L4/4.1.23.png" width="500"> 
+
+      The final class prediction of C&S is the class with the maximum $𝒁^{(𝟑)}$ score.
+
+      Note: The $𝒁^{(𝟑)}$ scores do not have direct probabilistic interpretation (e.g., not sum to 1 for each node), but larger scores indicate the classes are more likely.
+
+Our toy example shows that C&S successfully improves base model performance using
+graph structure. On real world datasets, C&S can significantly improves the performance of the base model (e.g. MLP).
+
+<img src="src/L4/4.1.24.png" width="500">
+
+Summary:
+
+- Correct & Smooth (C&S) uses graph structure to post process the soft node labels predicted by any base model.
+- Correction step: Diffuse and correct for the training errors of the base predictor.
+- Smooth step: Smoothen the prediction of the base predictor (a variant of label propagation).
+- C&S can be combined with GNNs
+- C&S achieves strong performance on semi-supervised node classification.
+
+### 4.4 Masked Label Prediction
+
+Inspired from BERT objective in NLP, an alternative approach to explicitly include node label information (works with GNN).
+
+BERT Pretraining strategy: masked word prediction
+
+<img src="src/L4/4.2.1.png" width="500">
+
+Idea: Treat labels as additional features. Concatenate the node label matrix 𝑌 with the node feature matrix 𝑋.
+
+ML Setting: : Use partially observed labels $\hat𝑌$ to predict the remaining unobserved labels.
+- Training: First corrupt $\hat𝑌$ into $\tilde{Y}$ by randomly masking a portion of node labels to zeros, then use $[X, \tilde{Y}]$ to predict the masked node labels.
+- Inference: Employ all $\hat𝑌$ to predict the remaining unlabeled nodes (in the validation/test set).
+- Similar to link prediction, also a self-supervised task.
+
+#### Lecture Summary
+
+3 ideas that **explicitly use labels** when making predictions on graphs:
+
+- Label propagation: Directly propagate known labels to all the nodes
+- Correct & Smooth: First define a base predictor, then correct and smooth the predictions with label propagation
+- Masked label prediction: Construct a self supervised ML task, let graph ML
+model to propagate label information
+
+3 Frameworks to approach ML tasks on graphs:
+1. Node embeddings
+   
+   Embed nodes into Euclidean space, and use distance metric in embedding space to approximate node similarity.
+
+2. Graph Neural Networks
+
+    Iterative neighborhood aggregation
+
+3. Label Propagation
+
+    Inductive bias: homophily
+
+    Explicitly incorporate label info when making predictions
+
