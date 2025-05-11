@@ -55,38 +55,42 @@ Problem Setup:
 
 <img src="src/2.1.7.png" width="400">
 
-- A Naive Approach: Join adjacency matrix and features. Feed them intoa deep neural net.
+- A Naive Approach: Join adjacency matrix and features. Feed them into a deep neural net.
 
     <img src="src/2.1.8.png" width="600">   
 
     Issues with this idea:
-  - O(|V|) parameters
+  - O(|V|d) parameters, not scalable.
   - Not applicable to graphs of different sizes
+  
+    The input dim varies based on the number of nodes. i.e. training on a 5-node graph does not apply to a 6-node graph.
   - Sensitive to node ordering
 
-- Idea: Convolutional Netowrks
+- Idea: Convolutional Netoworks
+
+    Graphs are often visualized as an image, so CNN on images might fit.
 
     <img src="src/2.1.9.png" width="600">     
 
     Goal is to generalize convolutions beyonod simple lattices leveraging node features/attributes (i.e. text, images).
 
-    But for real-world graphs, there is no fixed notion of locality or sliding window on the graph. Graph is permutation invariant.
+    But for real-world graphs, there is no fixed notion of locality or sliding window on the graph. Graph is permutation invariant because it is unordered.
 
-- Permutation Invariance
+- Property 1: Permutation Invariance
 
     Graph does not have a canonical order of the nodes! We can have many different order plans.
 
     <img src="src/2.1.10.png" width="600">   
 
-    **Graph and node representations should be the same for order plan 1 and 2.**
+    Consider we learn a function $f$ that maps a graph $G=(A,X)$ to a **vector of length d**. **Graph and node representations should be the same for order plan 1 and 2.**
 
     <img src="src/2.1.11.png" width="500">  
 
     <img src="src/2.1.12.png" width="500">  
 
-- Permutation Equivariance
+- Property 2: Permutation Equivariance
 
-    For node representation, consider we learn a function $f$ that maps a graph $G=(A,X)$ to a matrix of shape (m,d).
+    For **node representation**, consider we learn a function $f$ that maps a graph $G=(A,X)$ to a **matrix of shape (m,d)**.
 
     If the output vector of a node at the same position in the graph remains unchanged for any order plan, we say $f$ is **permutation equivariant**.
 
@@ -104,7 +108,7 @@ Problem Setup:
 
     <img src="src/2.1.16.png" width="500"> 
 
-    Therefore, we need to design GNNs that are permutation invariant/equivariant by passing and aggregating information from neighbors.
+    Therefore, **we need to design GNNs that are permutation invariant/equivariant by passing and aggregating information from neighbors**.
 
 #### 2.1.3 Graph Convolution Networks
 
@@ -114,11 +118,13 @@ General Idea: Node's neighborhood defines a computation graph. Learn how to prop
 
 - Aggregate Neighbors
 
-    Key idea: Generate node embeddings based on local network neighborhoods. Information is aggregated from their neighbors using neural networks.
+  Key idea: Generate node embeddings based on local network neighborhoods. Information is aggregated from their neighbors using neural networks.
 
-    <img src="src/2.1.18.png" width="500"> 
+  Note: a node can appear multiple times in a computational graph. i.e. a node is a 2-hop neighbor of itself.
 
-    <img src="src/2.1.19.png" width="500">    
+  <img src="src/2.1.18.png" width="500"> 
+
+  <img src="src/2.1.19.png" width="500">    
 
 - Deep Model: Many Layers
 
@@ -129,20 +135,36 @@ General Idea: Node's neighborhood defines a computation graph. Learn how to prop
   
     <img src="src/2.1.20.png" width="500">  
 
-- Neighborhood Aggreagation: Key distinctions are in how different approaches aggregate info across the layers.
+    - Over-smoothing problem: 
+      
+    Intuitively, the number of layers tells us how far you can see from a target node in a network. Usually we pick the number of layers approximately equal to the diameter of the graph (max distance between two nodes) to prevent from over-smoothing problem. If a GNN is too deep, we will fail to differentiate the nodes due to similar aggregated embeddings. This is very different from other types of neural networks where the layers are not bound.
+
+- Neighborhood Aggregation: Key distinctions are in how different approaches aggregate info across the layers.
 
     Basic approach: average info from neighbors and apply a neural network.
 
     <img src="src/2.1.21.png" width="500">  
 
+    Above defines one layer of GNN, which requires message passing computation in forward() as below:
+
+    - Get the target node's own embedding and its neighbors' avg  embeddings from prior layer
+    - Apply linear transformations (encoding) on both
+    - Sum the linear transformed outputs
+    - Apply non-linear function at the end
+
+
     The invariance and equivariance properties for a GCN:
-    - Given a node, the GCN that computes its embedding is permutation invariant.
+    - Given a node, the GCN that computes its embedding is permutation invariant. Why?
+      - shared NN weights
+      - sum/avg as the aggregation method
 
     <img src="src/2.1.22.png" width="500">  
 
     - Considering all nodes in a graph, GCN computation is permutation equivariant.
 
     <img src="src/2.1.23.png" width="500"> 
+
+    Above two properties ensure we can get reliable embeddings for a given node, regardless of the node orderings.
 
 - Training the Model: Model Parameters
 
@@ -156,15 +178,18 @@ General Idea: Node's neighborhood defines a computation graph. Learn how to prop
 
 - Training the Model: Matrix Formulation
   
-  Many aggregations can be performed efficiently by (sparse) matrix operations.
+  Many aggregations can be performed efficiently by **(sparse) matrix operations**.
 
     <img src="src/2.1.26.png" width="600"> 
+
+    $A_v$ is the adjacency matrix corresponding to the target node v.
+
     <img src="src/2.1.27.png" width="500"> 
 
     Note: not all GNNs can be expressed in matrix form, when aggregation function is complex.
 - Training the Model: Loss function
 
-    <img src="src/2.1.24.png" width="500"> 
+    <img src="src/2.1.24.png" width="400"> 
     
   - Unsupervised Training: "Similar" nodes have similar embeddings
 
@@ -183,8 +208,8 @@ General Idea: Node's neighborhood defines a computation graph. Learn how to prop
     3. Train on a set of nodes, i.e. a batch of compute graphs
     4. Generate embeddings for nodes as needed, even for nodes we never trained on.
 
-- Inductive Capability
-    - The same aggregation parameters are shared for all nodes. 
+- Inductive Capability: GNN can generalize to unseen nodes
+    - The same aggregation parameters are shared for all nodes, so we are not bounded by how the input nodes look like.
     - The number of model parameters is sublinear in |V| and we can generalize to unseen nodes.
   
   <img src="src/2.1.30.png" width="500">  
@@ -192,6 +217,8 @@ General Idea: Node's neighborhood defines a computation graph. Learn how to prop
     - New Nodes: Many application settings constantly encounter previously unseen nodes, i.e. Reddit, YouTube, Google Scholar. So we need to generate new embeddings "on the fly".
     
     - New Graphs: Inductive node embedding also allows generalizing to entirely unseen graphs. i.e. train on protein interaction graph from model organism A and generate embeddings on newly collected data about organism B.
+
+    In practice, we re-evaluate on a hold-out test set over time, until at some point the model fails to generalize. This will signal a model retraining/fine-tuning.
 
 #### 2.1.3 GNNs subsume CNNs
 
@@ -216,7 +243,6 @@ CNN can be seen as a special GNN with fixed neighbor size and ordering:
 
 A General GNN Framework: 
 
-
 1. GNN Layer = Message + Aggregation
     - Different instantiations under this perspective
     - GCN, GraphSAGE, GAT, ...
@@ -231,17 +257,16 @@ A General GNN Framework:
 
 4. Learning objective: How do we train a GNN
     - Supervised/Unsupervised objectives
-    - node/Edge/Graph level objectives
+    - Node/Edge/Graph level objectives
 
 <img src="src/2.2.1.png" width="500">
 
 #### 2.2.2 Designing a Single Layer of a GNN
 
-Idea of a GNN Layer:
-- Compress a set of vectors into a single vector
+Idea of a GNN Layer: Compress a set of vectors into a single vector
 - Two step process: Message + Aggregation
 
-<img src="src/2.2.2.png" width="400"> 
+  <img src="src/2.2.2.png" width="300"> 
 
 - Message Computation
 
@@ -257,7 +282,7 @@ Idea of a GNN Layer:
 
     <img src="src/2.2.4.png" width="300">
 
-    Example: Sum, Mean, or Max aggregator
+    Example: Sum, Mean, or Max aggregator (all are permutation invariant)
     - $h^{(l)}_v=Sum({m^{(l)}_u,u \in N(v)})$
 
     Issue: Info from node $v$ itself could get lost.
@@ -276,6 +301,8 @@ Idea of a GNN Layer:
     <img src="src/2.2.98.png" width="500">
 
 - Classical GNN Layers: GraphSAGE
+
+  Extending on GCN, it allows for multiple choices of aggregation functions, and considers the embedding of the target node itself.
 
     <img src="src/2.2.97.png" width="500">
 
