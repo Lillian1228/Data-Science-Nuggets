@@ -300,7 +300,7 @@ Idea of a GNN Layer: Compress a set of vectors into a single vector
     <img src="src/2.2.99.png" width="300">
     <img src="src/2.2.98.png" width="500">
 
-- Classical GNN Layers: GraphSAGE
+- Classical GNN Layers: **GraphSAGE**
 
   Extending on GCN, it allows for multiple choices of aggregation functions, and considers the embedding of the target node itself.
 
@@ -311,6 +311,10 @@ Idea of a GNN Layer: Compress a set of vectors into a single vector
     Two-stage aggregation:
     1. Aggregate from node neighbors: $h^{(l)}_{n(v)}=AGG({h^{(l-1)}_u, u \in N(v)})$
     2. Further aggregate over the node itself: $h^{(l)}_v=\sigma(W{(l)} \cdot CONCAT(h^{(l-1)}_v, h^{(l)}_{N(v)}))$
+
+    Although GraphSAGE leverages the node's previous layer embedding, this is not exactly a skip connection: 
+    
+    In this case self-embedding is merged through concatenation and passed through the transformation layer (linear + activation), whereas in skip (residual) connection node's input bypasses the linear transformation and is added direclty to the output (shortcut).
    
    Neighbor Aggregation Methods:
    - Mean: Take a weighted average of neighbors
@@ -323,9 +327,11 @@ Idea of a GNN Layer: Compress a set of vectors into a single vector
 
     - LSTM: Apply LSTM to reshuffled of neighbors
 
+      sequence model is not order invariant so it's important to shuffle the order of neighbors for trianing in this case.
+
         <img src="src/2.2.94.png" width="400"> 
 
-    L2 Normalization: optionally, apply L2 normalization to $h^{(l)}_v$ at every layer
+    L2 Normalization: optionally, apply L2 normalization to the embedding $h^{(l)}_v$ at every layer
 
     <img src="src/2.2.93.png" width="400">
 
@@ -333,17 +339,17 @@ Idea of a GNN Layer: Compress a set of vectors into a single vector
     - In some cases (not always), normalization of embedding results in performance improvement
     - After $l_2$ normalization, all vectors will have the same $l_2$-norm.
 
-- Classical GNN Layers: Graph Attention Networks (GAT)
+- Classical GNN Layers: **Graph Attention Networks (GAT)**
 
     <img src="src/2.2.92.png" width="300">
 
-    In GCN/GraphSAGE, $\alpha_{vu}=1/|N(v)|$ is the weighting factor (importance) of node $u$'s message to node $v$.
+    In GCN/GraphSAGE, $\alpha_{vu}=1/|N(v)|$ is the **weighting factor (importance)** of node $u$'s message to node $v$.
     - $\alpha_{vu}$ is defined explicitly based on the structural properties of the graph (node degree)
     - All neighbors $u \in N(v)$ are equally important to node $v$
   
     Can we do better than simple neighborhood aggregation? 
     
-    -> GAT however assumes not all node's neighbors are equally important.
+    &rarr; GAT however assumes not all node's neighbors are equally important.
     - Attention is inspired by cognitive attention. The attention $\alpha_{vu}$ focuses on the important parts of the input data and fades out the rest.
     - Idea: the NN should devote more computing power on that small but important part of the data
     - Which part of the data is more important depends on the context and is learned through training.
@@ -375,12 +381,17 @@ Idea of a GNN Layer: Compress a set of vectors into a single vector
     
     - Parameters of $\alpha$ are trained jointly: learn the param together with weight matrices (i.e. other param of the NN $W^{(l)}$) in an end-to-end fashion.
 
+    Why attention weights can generalize to unseen nodes/graphs: 
+    - although $\alpha_{vu}$ is edge-specifc, $\alpha$ is a shared attention function learned from training that can be computed on the fly from the given node embeddings (not node IDs).
+    - GAT leverages local neighborhoods (1-hop or multi-hop) for message passing. So even in unseen graphs, as long as the local structures and features resemble those in the training, and the attention mechanism has been trained to handle a variety of local feature combinations, then GAT can generalize effectively.
+
     **Multi-head attention**: Stabilize the learning process of attention mechanism.
-    - Create multiple attention scores (each replica with a different set of parameters):
+    - Create multiple attention scores for each edge (each replica with a different set of parameters):
 
         <img src="src/2.2.87.png" width="300">   
     
     - Outputs are aggregated by concatenation or summation: $h^{(l)}_v=AGG(h^{(l)}_v[1], h^{(l)}_v[2], h^{(l)}_v[3])$
+    - Each version of $a$ has a chance to converge at a local optimum, and by aggregating them it allows the model to be more robust and not be stuck at some weird path of the optimization space.
   
     Benefits of Attention Mechanism:
 
@@ -401,6 +412,8 @@ Idea of a GNN Layer: Compress a set of vectors into a single vector
 
     <img src="src/2.2.86.png" width="500">
 
+    Attention weights can be asymmetric: message weight from node i to j is different from that from node j to i.
+
 - GNN Layer in Practice
 
     In practice, these classic GNN layers are a great starting point. We can often get better performance by considering a general GNN layer design. Concretely, we can include **modern deep learning modules** that proved to be useful in many domains.
@@ -412,15 +425,18 @@ Idea of a GNN Layer: Compress a set of vectors into a single vector
   Batch Normalization:
   - Goal: Stabilize neural networks training
   - Idea: Given a batch of inputs (node embeddings)
-    - Re-center the node embeddings into zero mean
-    - Re-scale the variance into unit variance
+    - Compute mini-batch statistics
+    - Re-center the node embeddings into zero mean and re-scale the variance into unit variance
+    - Scale and shift with trainable param: Apply a learnable linear transformation to the normalized output. 
+      
+      The last step preserves the model's representational power by giving it the freedom to stretch and shift the embedding distribution in a learned dzta-dependent way.
 
   <img src="src/2.2.84.png" width="500"> 
 
    Dropout:
    - Goal: Regularize a NN to prevent overfitting
    - Idea:
-     - During training: with some probability p, randomly set neurons to ero (turn off)
+     - During training: with some probability p, randomly set neurons to zero (turn off)
      - During testing: Use all the neurons for computation
 
     - In GNN, dropout is applied to the linear layer in the message function
@@ -428,7 +444,8 @@ Idea of a GNN Layer: Compress a set of vectors into a single vector
   <img src="src/2.2.83.png" width="400">  
 
     Activation (Non-linearity):
-
+  - Goal: Add expressive power
+  
   <img src="src/2.2.82.png" width="500">  
 
     Summary: 
@@ -442,9 +459,13 @@ The Standard way: Stacking GNN layers sequentially
 
 Input: Initial raw node features $X_v$
 
-Output: Node embeddings $h^{(l)}_v$ after L GNN layers
+Output: Node embeddings $h^{(L)}_v$ after L GNN layers
 
-- The Over-smoothing Problem: When stacking many GNN layers, all the node embeddings converge to the same value. This is bad because we want to use node embeddings o differentiate nodes.
+- The Over-smoothing Problem: 
+  
+  The depth of GNN layers tells us how many hops away in the network we go to aggregate the info. It is different from the traditional notion of (non-graph) neural network layers, which adds complexity and expressive power as it gets deeper.
+
+  When stacking many GNN layers, all the node embeddings converge to the same value. This is bad because we want to use node embeddings of differentiate nodes.
 
 - Receptive Field of a GNN: 
   - Receptive field: The set of nodes that determine the embedding of a node of interest
@@ -457,7 +478,7 @@ Output: Node embeddings $h^{(l)}_v$ after L GNN layers
 - Why does over-smoothing happen?
 
     - We knew the embedding of a node is determined by its receptive field. If two nodes have highly-overlapped receptive fields, then their embeddings are highly similar.
-    - Stack many GNN layers -> nodes will have highly overlapped receptive fields -> node embeddings will be highly similar -> suffer from the oversmoothing problem
+    - Stack many GNN layers &rarr; nodes will have highly overlapped receptive fields &rarr; node embeddings will be highly similar &rarr; suffer from the over-smoothing problem
 
 - Design GNN Layer Connectivity
 
@@ -473,7 +494,7 @@ Output: Node embeddings $h^{(l)}_v$ after L GNN layers
 
       <img src="src/2.2.80.png" width="400"> 
     - Solution 2: Add layers that do not pass messages
-      - A GNN doesn't necessarily only contain GNN layers. i.e. we can add MLPlayers (applied to each node) before and after GNN layers, as pre-process and post-process layers.
+      - A GNN doesn't necessarily only contain GNN layers. i.e. we can add MLP layers (applied to each node) before and after GNN layers, as pre-process and post-process layers.
 
       <img src="src/2.2.79.png" width="500"> 
 
