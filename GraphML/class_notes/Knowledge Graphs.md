@@ -225,34 +225,267 @@ from ogbn-mag, predict the venue of each paper
 
 #### 5.1.3 Heterogeneous Graph Transformer
 
+<img src="src/L5/5.1.22.png" width="500"> 
 
+- Motivation: GAT is unable to represent different node & different edge types
+
+  Introduce a set of neural networks for each relation type is too expensive for attention
+  
+  Recall: relation describes (node_s, edge, node_e)
+
+- Basics: Attention in Transformer
+
+  HGT uses Scaled Dot-Product Attention (proposed in Transformer)
+
+  <img src="src/L5/5.1.23.png" width="500"> 
+
+- Heterogeneous Mutual Attention
+
+  Recall: Applying GAT to a homogeneous graph, where $H^{(l)}$ is the l-th layer representation.
+
+  <img src="src/L5/5.1.24.png" width="500"> 
+
+  Innovation: Decompose heterogeneous attention to Node- and edge-type dependent attention mechanism
+
+  <img src="src/L5/5.1.25.png" width="500">   
+
+  - 3 node weight matrices, 2 edge weight matrices
+  - Without decomposition: 3*2*3=18 relation types -> 18 weight matrices (suppose all relation types exist)
+
+  Heterogeneous Mutual Attention Definition: 
+
+  <img src="src/L5/5.1.26.png" width="400"> 
+
+  - Each relation (𝑇(s), 𝑅(e), 𝑇(t)) has a distinct set of **projection weights**
+    - T(s): type of node s, R(e): type of edge e.
+    - T(s) & T(t) parameterize K_Linear$_{T(s)}$ & Q_Linear$_{T(t)}$, which further return Key and Query vectors K(s) and Q(t)
+    - Edge type R(e) directly parameterizes $W_{R(e)}$
+
+- More Details on HGT
+
+  A full HGT layer: <img src="src/L5/5.1.27.png" width="400"> 
+
+  Similarly, HGT **decomposes weights** with node & edge types in the **message computation**
+
+  <img src="src/L5/5.1.28.png" width="500">  
+
+- HGT vs R-GCN: Performance
+
+  Benchmark: ogbn-mag from Microsoft Academic Graph, to predict paper venues
+
+  <img src="src/L5/5.1.29.png" width="500">  
+
+  Thanks to the weight decomposition over node & edge types, HGT uses much fewer parameters, even though the attention computation is expensive,
+while performs better than R-GCN
+  
 
 #### 5.1.4 Design Space for Heterogenous GNNs
 
+How do we extend the general GNN design space to heterogeneous graphs?
 
+1. Heterogeneous message computation
 
+     - Observation: A node could receive multiple types of messages. Num of message type = Num of relation type.
+     - Idea: Create a different message function for each relation type
 
+    - $m^{(l)}_u=MSG^{(l)}_r(h^{(l-1)}_u), r=(u,e,v)$ is the relation type between node u that sends the message, edge type e, and node v that receive the message.
+    - Example: A linear layer $m^{(l)}_u=W^{(l)}_rh^{(l-1)}_u$
 
+2. Heterogeneous Aggregation
+
+     - Observation: Each node could receive multiple types of messages from its neighbors, and multiple neighbors may belong to each message type.
+     - Idea: We can define a 2-stage message passing
+
+        <img src="src/L5/5.1.30.png" width="400"> 
+
+        Given all the messages sent to a node,
+        - Within each message type, aggregate the messages that belongs to the edge type with $AGG^{(l)}_r$
+        - Aggregate across the edge types with $AGG^{(l)}_{all}$
+    - Example: $h^{(l)}_v=Concat(Sum(m^{(l)}_u, u \in N_r(v)))$
+
+3. Heterogeneous GNN Layers
+
+  <img src="src/L5/5.1.31.png" width="500">   
+
+  Heterogeneous pre/post-process layers:
+  - MLP layers **with respect to each node type**, since the output of GNN are node embeddings
+  - $h^{(l)}_v=MLP_{T(v)}(h^{(l)}_v)$, where $T(v)$ is the type of node v.
+  
+  Other successful GNN designs are also encouraged for heterogeneous GNNs: skip connections, batch/layer normalization, …
+
+4. Heterogeneous Graph Manipulation
+
+    Graph Feature manipulation:
+     - 2 Common Options: compute graph statistics (i.e. node degree) within each relation type, or across the full graph (ignoring the relatino types)
+
+    Graph Structure manipulation:
+     - Neighbor and subgraph sampling are also common for heterogeneous graphs
+     - 2 Common options: sampling within each relatino type (ensure neighbors from each type are covered), or sample across the full graph.
+
+5. Heterogeneous Prediction Heads
+
+    Node-level predictions: <img src="src/L5/5.1.32.png" width="300"> 
+
+    Edge-level prediction: $\hat y_{uv}=Head_{edge,r}(h^{(L)}_u,h^{(L)}_v)=Linear_r(Concat(h^{(L)}_u,h^{(L)}_v))$
+    
+    Graph-level prediction: $\hat y_G=AGG(Head_{graph,i}(\{h^{(L)}_v \in \mathbb{R}^d, \forall T(v)=i\}))$
+    
+In summary, Heterogeneous GNNs extend GNNs by separately modeling node/relation types + additional AGG.
 
 ### 5.2 Knowledge Graph Embeddings
 
 #### 5.2.1 Motivation
 
+- Knowledge in graph form capture entities, types, and relationships:
+  - Nodes are entities, labeleld with their types
+  - Edges between two nodes capture relationships between entities
+  - KG is an example of a heterogeneous graph
 
-#### 5.2.2 Knowledge Graph Completion: TransE and TransR
+- Example: Bibliographic Networks
+  - Node types: paper, title, author, cnoference, year
+  - Relation types: pubWhere, pubYear, hasTitle, hasAuthor, cite
+
+  <img src="src/L5/5.2.1.png" width="400">   
+
+- Example: Bio Knowledge Graphs
+  - Node types: drug, disease, adverse event, protein, pathways
+  - Relation types: has_func, causes, assoc, treats, is_a
+
+  <img src="src/L5/5.2.2.png" width="400"> 
+
+- KG in Practice
+  - Google Knowledge Graph
+  - Amazon Product Graph
+  - Facebook Graph API
+  - IBM Watson
+  - Microsoft Satori
+  - Project Hanover/Literome
+  - LinkedIn Knowledge Graph
+  - Yandex Object Answer
+- Applications
+  - Serving information i.e. Bing search
+  - Question answering and conversation agents
+- KG Datasets
+  - Publicly available KGs: FreeBase, Wikidata, Dbpedia, YAGO, NELL, etc.
+  - Common characteristics:
+    - Massive: millions of nodes and edges
+    - Incomplete: Many true edges are missing
+
+  Given a massive KG, enumerating all the possible facts is intractable! Can we predict plausible But missing links?
+
+  - Example: Freebase
+
+    - ~80 million entities, ~38K relation types, ~3 billion facts/triples
+
+    - 93.8% of persons from Freebase have no place of birth and 78.5% have no nationality!
+    - Researchers use a **complete** subset of Freebase (Datasets: FB15k/FB15k-237) to learn KG models.
+
+      <img src="src/L5/5.2.3.png" width="300"> 
+
+- KG Completion Task: Given an enormous KG, can we complete the KG?
+  
+  For a given (head, relation), we predict missing tails. (Note this is slightly different from link prediction task)
+
+  <img src="src/L5/5.2.4.png" width="500"> 
+
+- Recap: "Shallow" Encoding - encoder is just an embedding-lookup
+
+    <img src="src/1.2_8.png" width="400">
+
+- KG Representation
+  - Edges in KG are represented as **triples (ℎ, 𝑟, 𝑡)**
+  - head (ℎ) has relation 𝑟 with tail (𝑡)
+
+  Key idea: 
+  - Model entities and relations in the embedding/vector space $ℝ^𝑑$.
+    - Associate entities and relations with **shallow embeddings**
+    - **Note we do not learn a GNN here!**
+  - Given a true triple (ℎ, 𝑟, 𝑡), the goal is that the embedding of (ℎ, 𝑟) should be close to the embedding of 𝑡.
+    - How to embed ℎ, 𝑟 ?
+    - How to define closeness?
+
+- Different Models
+
+  We are going to learn about different KG embedding models (shallow/transductive embs). They are:
+  - based on different geometric intuitions
+  - capture different types of relations (have different expressivity)
+
+  <img src="src/L5/5.2.5.png" width="500"> 
+
+#### 5.2.2 Knowledge Graph Completion: TransE
+
+- TransE - Translation Intuition: 
+  
+  For a triple $(h,r,t)$, $\mathbf{h,r,t} \in \mathbb{R}^d$, $\mathbf{h+r} \approx t$ if the given fact is true else $\mathbf{h+r} \neq t$ (embedding vectors will appear in boldface)
+
+  Scoring Function: $f_r(h,t)=-||\mathbf{h+r-t}||$
+
+  <img src="src/L5/5.2.6.png" width="300">  
+
+- TransE: Contrastive/Triplet Loss
+  
+  <img src="src/L5/5.2.7.png" width="500"> 
+
+- Connectivity Patterns in KG
+
+  Relations in a heterogeneous KG have different properties:
+  - **Symmetry**: If the edge (ℎ, "Roommate", 𝑡) exists in KG, then the edge (𝑡, "Roommate", ℎ) should also exist.
+  - **Inverse relation**: If the edge (ℎ, "Advisor", 𝑡) exists in KG, then the edge 𝑡, "Advisee", ℎ should also exist.
+
+  Can we categorize these relation patterns? &rarr; 4 Relation Patterns:
+  1. **Symmetric (Antisymmetric)** Relatons: <img src="src/L5/5.2.8.png" width="350"> 
+
+      Symmetric Example: Family, Roommate; Antisymmetric: Hypernym
+  
+  2. **Inverse** Relatons: $𝑟_2(ℎ, 𝑡) ⇒ 𝑟_1(𝑡, ℎ)$
+
+      Example: (Advisor, Advisee)
+  
+  3. **Composition (Transitive)** Relations: <img src="src/L5/5.2.9.png" width="350">  
+
+      Example: My mother’s husband is my father.
+
+  4. **1-to-N** relations: $𝑟(ℎ, 𝑡_1), 𝑟(ℎ, 𝑡_2), … , 𝑟(ℎ, 𝑡_𝑛)$ are all True.
+
+      Example: 𝑟 is “StudentsOf”
+
+- Is TransE expressive enough to model these patterns?
+
+  TransE **can** model:
+  - antisymmetric relations: 𝐡 + 𝐫 = 𝐭, but 𝐭 + 𝐫 ≠ 𝐡
+
+  - inverse relations: $𝐡 + 𝐫_𝟐 = 𝐭$, we can set $𝐫_1 = −𝐫_2$
+  - composition relations: $𝐫_3 = 𝐫_1 + 𝐫_2$
+
+    <img src="src/L5/5.2.10.png" width="200"> 
+    <img src="src/L5/5.2.11.png" width="200">   
+    <img src="src/L5/5.2.12.png" width="200">   
+
+  TransE **cannot** model:
+  - symmetric relations, only if $r=0, h=t$
+
+    <img src="src/L5/5.2.13.png" width="400"> 
+  
+  - 1-to-N relations: $𝐭_1$ and $𝐭_2$ will map to the same vector, although they are different entities
+
+    <img src="src/L5/5.2.14.png" width="400">  
+
+#### 5.2.3 Knowledge Graph Completion: TransR
 
 
 
 
-#### 5.2.3 Knowledge Graph Completion: DistMult
+
+
+#### 5.2.4 Knowledge Graph Completion: DistMult
 
 
 
 
-#### 5.2.4 Knowledge Graph Completion: ComplEx
+#### 5.2.5 Knowledge Graph Completion: ComplEx
 
 
-#### 5.2.5 Knowledge Graph Embeddings in Practice
+#### 5.2.6 Knowledge Graph Embeddings in Practice
 
 
 
