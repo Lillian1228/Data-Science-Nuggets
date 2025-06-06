@@ -582,18 +582,119 @@ DistMult **cannot** model:
   <img src="src/L5/5.2.27.png" width="200">
   <img src="src/L5/5.2.28.png" width="200"> 
   <img src="src/L5/5.2.29.png" width="200"> 
+
 #### 5.2.5 Knowledge Graph Completion: ComplEx
 
+Based on Distmult, ComplEx embeds entities and relations in **Complex vector space**
+
+ComplEx: model entities and relations using vectors in $ℂ^𝑘$
+
+  <img src="src/L5/5.2.30.png" width="400"> 
+
+- Score function: $𝑓_𝑟 (ℎ, 𝑡)$ = $Re(\sum_{𝑖} 𝐡_𝑖 ⋅ 𝐫_𝑖 ⋅ 𝐭_𝑖)$
+
+  <img src="src/L5/5.2.31.png" width="300"> 
+
+ComplEx can model:
+- Antisymmetric Relations
+
+  The model is expressive enough to learn 
+  
+  <img src="src/L5/5.2.32.png" width="300"> 
+
+  Due to the asymmetric modeling using complex conjugate.
+
+- Symmetric Relations
+
+  When Im(r) = 0, we have
+
+  <img src="src/L5/5.2.33.png" width="400"> 
+
+- Inverse Relations
+
+  <img src="src/L5/5.2.34.png" width="350">     
+
+- ComplEx share the same property with DistMult
+  - Cannot model composition relations
+  - Can model 1-to-N relations
 
 #### 5.2.6 Knowledge Graph Embeddings in Practice
 
+- Expressiveness of Different KG Completion Methods:
 
+  <img src="src/L5/5.2.5.png" width="500"> 
+
+1. Different KGs may have drastically different relation patterns!
+2. There is not a general embedding that works for all KGs, use the table to select models
+3. Try TransE for a quick run if the target KG does not have much symmetric relations
+4. Then use more expressive models, e.g., ComplEx, RotatE (TransE in Complex space)
+
+- Summary of Knowledge Graph
+
+  - Link prediction / Graph completion is one of the prominent tasks on knowledge graphs
+  - Introduce TransE / TransR / DistMult / ComplEx models with different embedding
+space and expressiveness
+  - Next: Reasoning in KG
 
 ### 5.3 Reasoning over Knowledge Graphs
+
+- Recap: KG Completion Task - For a given (head, relation), we predict missing tails. (Note this is slightly different from link prediction task)
+
+  <img src="src/L5/5.2.4.png" width="500"> 
+
+- Goal: How to perform multi-hop reasoning over KGs, i.e. answering complext queries on an incomplete massive KG?
+
+- Reasoning over KGs
+  - Answering multi-hop queries
+    - Path Queries
+    - Conjunctive Queries
+  - Query2box
 
 
 #### 5.3.1 Reasoning in KGs using Embeddings
 
-#### 5.3.2 Answering PRedictive Queries on KGs
+Example KG: Biomedicine
+ 
+<img src="src/L5/5.3.1.png" width="400"> 
+
+- Predictive Queries on KG
+
+|Query Types|Examples: Natural Language Question | Query|
+|-------------|---------|------|
+|One-hop Queries|What adverse event is caused by Fulvestrant?| (e:Fulvestrant, (r:Causes))|
+|Path Queries|What protein is associated with the adverse event caused by Fulvestrant?|(e:Fulvestrant, (r:Causes, r:Assoc))|
+|Conjunctive Queries|What is the drug that treats breast cancer and caused headache?|(e:BreastCancer, (r:TreatedBy)), (e:Migraine, (r:CausedBy))|
+
+In this lecture, we only focus on answering queries on a KG! The notation will be detailed next.
+
+<img src="src/L5/5.3.2.png" width="500"> 
+
+- Predictive One-hop Queries
+
+  We can formulate knowledge graph completion problems as answering one-hop queries.
+
+  KG completion: Is link (ℎ, r, t) in the KG? &rarr; One-hop query: Is t an answer to query (ℎ, (r))?
+
+  For example: What side effects are caused by drug Fulvestrant?
+
+- Path Queries
+
+  - Generalize one-hop queries to path queries by **adding more relations on the path**.
+  - An n-hop path query q can be represented by $q=(v_a,(r_1,...,r_n))$. where $v_a$ is an "anchor" entity.
+  - answeres are denoted by $[[q]]_G$
+  - Query plan of path queries is a chain:
+
+    <img src="src/L5/5.3.3.png" width="400"> 
+
+  - Example: What proteins are *associated* with adverse events *caused* by *Fulvestrant*?
+    - $v_a$ is e:Fulvestrant
+    - $(r_1,r_2)$ is (r:Causes, r:Assoc)
+    - Query: (e:Fulvestrant, (r:Causes, r:Assoc))
+
+    <img src="src/L5/5.3.4.png" width="400"> 
+    
+    - Given a KG, how to answer a path query?
+
+#### 5.3.2 Answering Predictive Queries on KGs
 
 #### 5.3.3 Query2Box: Reasoning over KGs using Box Embeddings
