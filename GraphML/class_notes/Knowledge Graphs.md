@@ -21,8 +21,7 @@
 
 - Definition: A heterogeneous graph is defined as $G=(V,R,T,E)$
   - Nodes $v_i \in V$ with node types $T(v_i)$
-  - Edge types $e \in E$
-  - Relations with relation types $(v_i,e,v_j) \in E$
+  - Relations with relation types $(v_i,e,v_j) \in R$ and edge types $e \in E$
 
 - Examples
   1. Biomedical Knowledge Graphs: (fulvestrant, Treats, Breast Neoplasms)
@@ -35,7 +34,7 @@
 
   3. E-Commerce Graph
        - Node types: User, Item, Query, Location, ...
-       - Edge types: Purchase, Visit, Guide, Search, ...
+       - Edge types (interactions): Purchase, Visit, Guide, Search, ...
        - Different node type's features spaces can be different!
 
     <img src="src/L5/5.1.4.png" width="400">   
@@ -43,7 +42,7 @@
   4. Academic Graph
        - Node types: Author, Paper, Venue, Field, ...
        - Edge types: Publish, Cite, ...
-       - Benchmark dataset: Microsoft Academic Graph
+       - Benchmark dataset: **Microsoft Academic Graph**
   
     <img src="src/L5/5.1.5.png" width="400">    
 
@@ -56,12 +55,12 @@
 
 - When do we need a heterogeneous graph?
 
-    Case 1: Different node/edge types have different shapes of features
+    Case 1: Different node/edge types **have different shapes of features**
     - An “author node” has 4-dim feature, a “paper node” has
 5-dim feature
     
     Case 2: We know different relation types
-represent different types of interactions
+**represent different types of interactions**
     - (English, translate, French) and (English, translate, Chinese) require different models
 
     Ultimately, heterogeneous graph is a more expressive graph representation
@@ -75,23 +74,27 @@ represent different types of interactions
 
 #### 5.1.2 Relational GCN (RGCN)
 
-<img src="src/L5/5.1.6.png" width="400"> 
+Recap:
 
-We will extend GCN to handle heterogeneous graphs with multiple edge/relation types
+<img src="src/L5/5.1.6.png" width="400"> 
 
 We start with a directed graph with one relation. How do we run GCN and update the representation of the target node A on this graph?
 
 <img src="src/L5/5.1.7.png" width="500"> 
 
+We will extend GCN to handle heterogeneous graphs with multiple edge/relation types.
+
 - What if the graph has multiple relation types?
 
-    Use different neural network weights for different relation types.
+    Idea: Use different neural network weights for different relation types.
 
     <img src="src/L5/5.1.8.png" width="400"> 
 
+    Keep the computational graph structure the same, except that we will learn different weights based on relation types.
+
     <img src="src/L5/5.1.9.png" width="300">  
 
-    Introduce a set of neural networks for each relation type!
+    Another view: consider the heterogenous graph as N different standard graphs, where one particular graph stores the connectivity of one particular relation type. We learn a set of neural networks for each relation type from the same input hetero graph!
 
     <img src="src/L5/5.1.10.png" width="300">
 
@@ -101,26 +104,26 @@ We start with a directed graph with one relation. How do we run GCN and update t
 
     How to write this as Message + Aggregation?
     - Message: 
-      - Each neighbor of a given relataion: $m^{(l)}_{(u,r)}=1/c_{(u,r)}W^{(l)}_rh^{(l)}_u$, normalized by node degree of the relation $c_{(u,r)}=|N^r_v|$.
-      - Self-loop: $m^{(l)}_v=W^{(l)}_0h^{(l)}_v$
-    - Aggregation: Sum over messages from neighbors and self-loop, then apply activation
+      - Each neighbor of a given relation: $m^{(l)}_{(u,r)}=1/c_{(u,r)}W^{(l)}_rh^{(l)}_u$, normalized by node degree of the relation $c_{(u,r)}=|N^r_v|$.
+      - Self-loop (transformation of the node itself): $m^{(l)}_v=W^{(l)}_0h^{(l)}_v$
+    - Aggregation: Sum over messages from neighbors and self-loop under the same relation type, and also sum over all the relation types, then apply activation
     
       <img src="src/L5/5.1.12.png" width="400">
 
-- Scalability
+- RGCN Scalability
   - Each relation has L matrices: $W^{(1)}_r,W^{(2)}_r,...W^{(L)}_r$
-  - The size of each $W^{(l)}_r$ is $𝑑^{(𝑙+1)} × 𝑑^{(𝑙)}$, where $𝑑^{(𝑙)}$ is the hidden dimension in layer l.
+  - The size of each $W^{(l)}_r$ is $𝑑^{(𝑙+1)} × 𝑑^{(𝑙)}$, where $𝑑^{(𝑙)}$ is the hidden dimension in layer l. This essentially projects the input dim $𝑑^{(𝑙)}$ to output dim $𝑑^{(𝑙+1)}$.
 
     &rarr; Rapid growth of the number of parameters w.r.t number of relations! Overfitting becomes an issue!
-  - Two methods to regularize the weights $W^{(l)}_r$
+  - Two methods to regularize the weights $W^{(l)}_r$ (reduce the number of param for each relation type)
     1. Use block diagonal matrices
-    2. Basis/Dictionary learning
+    2. Basis/Dictionary learning 
    
 - Block Diagonal Matrices
 
-    key insight: make the weights sparse!
+    key insight: the graphs are rarely fully connected, so the weights shouldn't be dense. Make the weights sparse!
 
-    Use block diagnonal matrices for $W_r$
+    Use **block diagnonal matrices for $W_r$** so that only the block diagonal entires are non-zero.
 
     <img src="src/L5/5.1.13.png" width="400">
 
@@ -166,16 +169,18 @@ We start with a directed graph with one relation. How do we run GCN and update t
 
     <img src="src/L5/5.1.15.png" width="200"> 
 
-    - Take the final layer of E and A: $h^{(L)}_E$ and $h^{(L)}_A \in \mathbb{R}^d$ 
+    - Take the final layer embeddings of E and A: $h^{(L)}_E$ and $h^{(L)}_A \in \mathbb{R}^d$ 
     - Relation-specific score function $f_r: \mathbb{R}^d \times \mathbb{R}^d$ &rarr; $\mathbb{R}$
-      - one example $f_{r_1}(h_E,h_A)=h^T_EW_{r_1}h_A$, $W_{r_1} \in \mathbb{R}^{d \times d}$
+    - Example link prediction head using linear transformation: $f_{r_1}(h_E,h_A)=h^T_EW_{r_1}h_A$, $W_{r_1} \in \mathbb{R}^{d \times d}$
   
     Training:
 
+    - Negative sampling helps to define the classification tasks correctly: manually create some edges that do not exist.
+
     <img src="src/L5/5.1.16.png" width="500"> 
     
-    1. Use GNN model to score negative edge
-    2. Optimize a standard cross entropy loss: 
+    3. Use GNN model to score negative edge
+    4. Optimize a standard cross entropy loss: 
        - Maximize the score of training supervision edge
        - Minimize the score of negative edge
 
@@ -184,6 +189,8 @@ We start with a directed graph with one relation. How do we run GCN and update t
     Evaluation: Use training message edges & training supervision edges to predict validation edges. Validation time as an example, same at the test time.
 
     <img src="src/L5/5.1.18.png" width="500"> 
+
+    - Reciprocal Rank Metric
 
     <img src="src/L5/5.1.19.png" width="500"> 
 
@@ -225,17 +232,19 @@ from ogbn-mag, predict the venue of each paper
 
 #### 5.1.3 Heterogeneous Graph Transformer
 
-<img src="src/L5/5.1.22.png" width="500"> 
+Recap: 
+
+<img src="src/L5/5.1.22.png" width="400"> 
 
 - Motivation: GAT is unable to represent different node & different edge types
 
-  Introduce a set of neural networks for each relation type is too expensive for attention
+  Introduce a set of neural networks for each relation type is **too expensive** for attention
   
   Recall: relation describes (node_s, edge, node_e)
 
 - Basics: Attention in Transformer
 
-  HGT uses Scaled Dot-Product Attention (proposed in Transformer)
+  HGT uses Scaled Dot-Product Attention (same as proposed in Transformer)
 
   <img src="src/L5/5.1.23.png" width="500"> 
 
@@ -245,7 +254,7 @@ from ogbn-mag, predict the venue of each paper
 
   <img src="src/L5/5.1.24.png" width="500"> 
 
-  Innovation: Decompose heterogeneous attention to Node- and edge-type dependent attention mechanism
+  Innovation: Decompose heterogeneous attention to **node- and edge-type dependent attention mechanism**
 
   <img src="src/L5/5.1.25.png" width="500">   
 
@@ -260,12 +269,15 @@ from ogbn-mag, predict the venue of each paper
     - T(s): type of node s, R(e): type of edge e.
     - T(s) & T(t) parameterize K_Linear$_{T(s)}$ & Q_Linear$_{T(t)}$, which further return Key and Query vectors K(s) and Q(t)
     - Edge type R(e) directly parameterizes $W_{R(e)}$
+  - Attention head for each relation type is a dot product of K and Q.
 
 - More Details on HGT
 
   A full HGT layer: <img src="src/L5/5.1.27.png" width="400"> 
 
-  Similarly, HGT **decomposes weights** with node & edge types in the **message computation**
+  There're multiple options of the aggregation function like summation.
+
+  Similar to attention computation, HGT also **decomposes weights** with node & edge types in the **message computation**
 
   <img src="src/L5/5.1.28.png" width="500">  
 
@@ -275,8 +287,8 @@ from ogbn-mag, predict the venue of each paper
 
   <img src="src/L5/5.1.29.png" width="500">  
 
-  Thanks to the weight decomposition over node & edge types, HGT uses much fewer parameters, even though the attention computation is expensive,
-while performs better than R-GCN
+  Thanks to the weight decomposition over node & edge types, HGT uses **much fewer parameters**, even though the attention computation is expensive,
+while **performs better than R-GCN**.
   
 
 #### 5.1.4 Design Space for Heterogenous GNNs
@@ -308,7 +320,7 @@ How do we extend the general GNN design space to heterogeneous graphs?
   <img src="src/L5/5.1.31.png" width="500">   
 
   Heterogeneous pre/post-process layers:
-  - MLP layers **with respect to each node type**, since the output of GNN are node embeddings
+  - MLP layers should be **with respect to each node type**, since the output of GNN are node embeddings of different types
   - $h^{(l)}_v=MLP_{T(v)}(h^{(l)}_v)$, where $T(v)$ is the type of node v.
   
   Other successful GNN designs are also encouraged for heterogeneous GNNs: skip connections, batch/layer normalization, …
@@ -316,11 +328,11 @@ How do we extend the general GNN design space to heterogeneous graphs?
 4. Heterogeneous Graph Manipulation
 
     Graph Feature manipulation:
-     - 2 Common Options: compute graph statistics (i.e. node degree) within each relation type, or across the full graph (ignoring the relatino types)
+     - 2 Common Options: compute graph statistics (i.e. node degree) within each relation type, or across the full graph (ignoring the relation types)
 
     Graph Structure manipulation:
      - Neighbor and subgraph sampling are also common for heterogeneous graphs
-     - 2 Common options: sampling within each relatino type (ensure neighbors from each type are covered), or sample across the full graph.
+     - 2 Common options: sampling within each relation type (ensure neighbors from each type are covered), or sample across the full graph.
 
 5. Heterogeneous Prediction Heads
 
@@ -398,10 +410,11 @@ In summary, Heterogeneous GNNs extend GNNs by separately modeling node/relation 
 
   Key idea: 
   - Model entities and relations in the embedding/vector space $ℝ^𝑑$.
-    - Associate entities and relations with **shallow embeddings**
+    - Associate entities and relations with **shallow embeddings** (no GNNs)
     - **Note we do not learn a GNN here!**
+    - This is because KG usually doesn't have node features. All the info are in the relations.
   - Given a true triple (ℎ, 𝑟, 𝑡), the goal is that the embedding of (ℎ, 𝑟) should be close to the embedding of 𝑡.
-    - How to embed ℎ, 𝑟 ?
+    - How to embed (ℎ, 𝑟)?
     - How to define closeness?
 
 - Different Models
@@ -472,16 +485,103 @@ In summary, Heterogeneous GNNs extend GNNs by separately modeling node/relation 
 
 #### 5.2.3 Knowledge Graph Completion: TransR
 
+TransE models translation of any relation in the **same** embedding space. Can we design a new space for each relation and do translation in **relation-specific space**?
 
+TransR: model entities as vectors in the entity space $ℝ^𝑑$ and model each relation as vector in relation space 𝐫 ∈ $ℝ^𝑘$ with $𝐌_𝑟 ∈ ℝ^{𝑘×𝑑}$ as the **projection matrix**.
 
+  <img src="src/L5/5.2.15.png" width="500">  
 
+TransR can model:
 
+- Symmetric Relations in TransR
+
+  $𝑟(ℎ, 𝑡) ⇒ 𝑟(𝑡, ℎ)$ i.e. Family, Roommate
+
+  Note: different symmetric relations may have different $M_r$
+
+  <img src="src/L5/5.2.16.png" width="500">   
+
+- Antisymmetric Relations 
+
+  <img src="src/L5/5.2.17.png" width="200">  i.e. Hypernym
+
+  <img src="src/L5/5.2.18.png" width="500">   
+
+- 1-to-N Relations
+
+  Example: (h, r, t1) and (h, r, t2) exist in the KG.
+
+  <img src="src/L5/5.2.19.png" width="400">  
+
+- Inverse Relations
+
+  $𝑟_2(ℎ, 𝑡) ⇒ 𝑟_1(𝑡, ℎ)$ i.e. (Advisor, Advisee)
+
+  <img src="src/L5/5.2.20.png" width="500">  
+
+- Composition Relations
+
+  <img src="src/L5/5.2.9.png" width="350">  i.e. My mom's husband is my dad.
+
+  High-level intuition: TransR models a triple with linear functions, so they are chainable.
+
+  Background - Kernel space of a matrix M: $h\in Ker(M)$, then $Mh=0$
+
+  <img src="src/L5/5.2.21.png" width="400">  
+
+  <img src="src/L5/5.2.22.png" width="500">  
+
+  <img src="src/L5/5.2.23.png" width="400">   
 
 #### 5.2.4 Knowledge Graph Completion: DistMult
 
+So far: The scoring function $𝑓_𝑟 (ℎ, 𝑡)$ is **negative of L1 / L2 distance** in TransE and TransR.
 
+Another line of KG embeddings adopt **bilinear modeling**.
 
+DistMult: Entities and relations using vectors in $ℝ^𝑘$
 
+- Score function: $𝑓_𝑟 (ℎ, 𝑡)$ =< 𝐡, 𝐫, 𝐭 > = $\sum_{𝑖} 𝐡_𝑖 ⋅ 𝐫_𝑖 ⋅ 𝐭_𝑖$
+
+  Intuition: can be viewed as a **cosine similarity** between $h⋅r$ and $t$, where $h⋅r$ is defined as $\sum_{𝑖} 𝐡_𝑖 ⋅ 𝐫_𝑖$
+
+  Example:   <img src="src/L5/5.2.24.png" width="250">  
+
+Distmult can model:
+
+- 1-to-N Relations: 
+
+  <img src="src/L5/5.2.25.png" width="250"> 
+
+- Symmetric Relations: $𝑓_𝑟 (ℎ, 𝑡)$ =< 𝐡, 𝐫, 𝐭 > = $\sum_{𝑖} 𝐡_𝑖 ⋅ 𝐫_𝑖 ⋅ 𝐭_𝑖$ = < t, 𝐫, h >=$𝑓_𝑟 (t, h)$
+
+DistMult **cannot** model:
+
+-  antisymmetric relations
+
+    𝑟(ℎ, 𝑡) and 𝑟(𝑡, ℎ) always have same score!
+
+- Inverse Relations
+
+  If it does model inverse relations: 
+  
+  <img src="src/L5/5.2.26.png" width="350">
+
+  But semantically this does not make sense: The embedding of “Advisor” should not be the same with “Advisee”.
+
+- Composition Relations
+
+  Intuition: DistMult defines a hyperplane for each (head, relation), the union of the hyperplane induced by multihops of relations, e.g., (𝑟1, 𝑟2), cannot be expressed using a single hyperplane.
+
+  Detailed derivation:
+  - Pick one y s.t. $𝑓_{𝑟_1} (x, y)$ > 0, e.g. $y_2$. Then $y_2 ⋅ r_2$ defines a new hyperplane.
+  - Pick another y s.t. $𝑓_{𝑟_1} (x, y)$ > 0, e.g. $y_3$. Then $y_3 ⋅ r_2$ defines another new hyperplane.
+  - Combine both hyperplanes together, then for all 𝑧 in the shadow area, there exists 𝑦 ∈ {$y_2$ , $y_3$} , s.t., $𝑓_{𝑟_2}(𝑦, 𝑧) > 0$
+  - According to the composition relations, we also want $𝑓_{𝑟_3}(𝑥, 𝑧) > 0$, ∀𝑧 ∈ {shadow area}. However, this area inherently cannot be expressed by a single hyperplane defined by $𝑥 ⋅ 𝑟_3$, no matter what $𝑟_3$ is.
+
+  <img src="src/L5/5.2.27.png" width="200">
+  <img src="src/L5/5.2.28.png" width="200"> 
+  <img src="src/L5/5.2.29.png" width="200"> 
 #### 5.2.5 Knowledge Graph Completion: ComplEx
 
 
