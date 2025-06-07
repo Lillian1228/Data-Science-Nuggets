@@ -695,6 +695,210 @@ In this lecture, we only focus on answering queries on a KG! The notation will b
     
     - Given a KG, how to answer a path query?
 
+      Answer path queries by traversing KG: 
+
+      Start from the anchor node “Fulvestrant” and traverse the KG by the relation “Causes”, we reach entities {“Brain Bleeding”, “Short of Breath”, “Kidney Infection”, “Headache”}.
+
+      <img src="src/L5/5.3.5.png" width="400">  
+- However, KGs are incomplete
+
+  Answering queries seems easy: Just traverse the graph. But, KGs are notoriously incomplete: Many relations between entities are missing or are incomplete. 
+  
+  For example, we lack all the biomedical knowledge. Enumerating all the facts takes non-trivial time and cost, we cannot hope that KGs will ever be fully complete.
+
+  &rarr; Due to KG incompleteness, one is not able to identify all the answer entities
+
+    <img src="src/L5/5.3.6.png" width="400">   
+
+- Can KG Completion Help?
+
+  Can we first do KG completion and then traverse the completed (probabilistic) KG?
+
+  - No! The “completed” KG is a dense graph!
+  - Most (h,r,t) triples (edge on KG) will have some nonzero probability.
+  - Time complexity of traversing a dense KG is exponential as a function of the path length L: $O(d^L_{max})$
+
+- Task: Predictive Queries 
+  
+  We need a way to answer path-based queries over an incomplete knowledge graph. We want our approach to implicitly impute and account for the incomplete KG.
+
+  &rarr; Generalization of the link prediction task
+
 #### 5.3.2 Answering Predictive Queries on KGs
 
+- Key Idea: Embed queries! Traverse KG in Vector Space.
+
+  - Generalize TransE to multi-hop reasoning.
+  - Recap: TransE translate h to t using r with score function $f_r(h,t)=-||\mathbf{h+r-t}||$.
+  - Another way to interpret this is:
+    - Query embedding q = h + r
+    - Goal: query embedding q is close to the answer embedding t &rarr; $f_q(t)=-||\mathbf{q-t}||$
+
+  - Given a path query $q = (v_a, (r_1, ..., r_n))$, we can embed the query following the query plan: $q = v_a + r_1 + ... + r_n$
+
+    <img src="src/L5/5.3.7.png" width="200"> 
+
+    The embedding process only involves vector addition, independent of # entities in the KG!
+
+- Insights
+  - We can train TransE to optimize knowledge graph completion objective (Lecture 10)
+  - Since **TransE can naturally handle compositional relations**, it can handle path queries by translating in the latent space for multiple hops using addition of relation embeddings.
+  - For **DistMult / ComplEx**, since they cannot handle compositional relations, they **cannot** be easily extended to handle path queries.
+
+- Conjunctive Queries
+
+  Can we answer more complex queries with logic conjunction operation?
+
+  - Example: What are drugs that cause Short of Breath and treat diseases associated with protein ESR2?
+
+    ((e:ESR2, (r:Assoc, r:TreatedBy)), (e:Short of Breath, (r:CausedBy)))
+
+    Query Plan: 
+
+      <img src="src/L5/5.3.8.png" width="400"> 
+  - How do we answer the Conjunctive Queries by KG traversal? 
+    - Traverse KG from the 1st anchor "ESR2" by relation “Assoc”, we reach a set of entities {“Lung Cancer”, “Breast Cancer”}
+    - Traverse from the set of entities {“Lung Cancer”, “Breast Cancer”} by relation TreatedBy, we reach a set of entities {“Paclitaxel”, “Arimidex”, “Fulvestrant”}
+    - Traverse from the second anchor “Short of Breath” by relation “CausedBy”, we reach a set of entities {“Fulvestrant”, “Ketamin”, “Paclitaxel”}
+    - We take interscetion between the two sets and get the answers {“Fulvestrant”, “Paclitaxel”}
+
+    <img src="src/L5/5.3.9.png" width="200"> 
+    <img src="src/L5/5.3.10.png" width="200">  
+    <img src="src/L5/5.3.11.png" width="200">   
+
+  - However, if the link between ESR2 and Breast Cancer is missing, we cannot find Fulvestrant to be an answer.
+
+      How can we use embeddings to implicitly impute the missing (ESR2, Assoc, Breast Cancer)?
+
+      <img src="src/L5/5.3.1.png" width="300"> 
+
+      Intuition: ESR2 interacts with both BRCA1 and ESR1. Both proteins are associated with breast cancer.
+
+      <img src="src/L5/5.3.8.png" width="400"> 
+
+      1. Each intermediate node represents a set of entities, how do we represent it? 
+      2. How do we define the intersection operation in the latent space?
+
 #### 5.3.3 Query2Box: Reasoning over KGs using Box Embeddings
+
+- Box Embeddings: Embed queries with **hyper-rectangles (boxes)**
+  
+  𝐪 = (𝐶𝑒𝑛𝑡𝑒𝑟(𝑞), 𝑂𝑓𝑓𝑠𝑒𝑡(𝑞))
+
+  <img src="src/L5/5.3.12.png" width="400">  
+
+- Key Insight: **Intersection of boxes is well-defined!**
+
+  When we traverse the KG to find the answers, each step produces a set of reachable entities. How can we better model these sets?
+
+  Boxes are a **powerful abstraction**, as we can project the center and control the offset to model the set of entities enclosed in the box.
+
+- Embed Queries with Box Embedding
+
+  Things to figure out:
+  - **Entity embeddings** (# params: d|V|): Entities are seen as zero-volume boxes
+  - **Relation embeddings** (# params 2d|R|): Each relation takes a box and produces a new box
+  - **Intersection operator 𝒇**: New operator, inputs are boxes and output is a box. Intuitively models intersection of boxes.
+
+  where d is out_degree, |V| is # entities, and |R| is # relations.
+
+  - Projection Operator $\mathcal{P}$
+
+    Intuition: take the current box as input and use the relation embedding to project and expand the box.
+
+    $\mathcal{P}$: Box x Relation &rarr; Box, "x" (cross) means the projection operator is a relation from any box to a new box
+    - $Cen(q')=Cen(q)+Cen(r)$
+    - $Off(q')=Off(q)+Off(r)$
+
+    In the prior example, we use projection operator following the query plan:
+
+    <img src="src/L5/5.3.13.png" width="400">  
+
+    How do we take intersection of boxes? 
+
+  - Geometric Intersection Operator $\mathcal{J}$: Take multiple boxes as input and produce the intersection box.
+
+    Intuition: 
+    - The center of the new blox should be **“close”** to the
+centers of the input boxes. 
+    - The offset (box size) should **shrink** (since the size of the intersected set is smaller than the size of all the input set)
+
+     <img src="src/L5/5.3.14.png" width="500"> 
+
+     <img src="src/L5/5.3.15.png" width="500"> 
+
+    In the prior example, we use box intersection operator:
+
+    <img src="src/L5/5.3.16.png" width="400">  
+
+  - Entity-to-Box Distance
+
+    How do we define the score function $f_q(v)$ (negative distance)?
+
+    &rarr; $f_q(v)$ captures inverse distance of a node $v$ as answer to $q$
+
+    Given a query box $q$ and entity embedding (box) $v$, $d_{box}(q,v)=d_{out}(q,v)+\alpha\cdot d_{in}(q,v)$ where $0<\alpha<1$.
+
+    Intuition: if the point is enclosed in the box, the distance should be
+**downweighted**.
+
+    <img src="src/L5/5.3.17.png" width="400">   
+
+- Extending to Union Operator
+
+  Can we embed complex queries with union? e.g. What drug can treat breast cancer **or** lung cancer?
+
+  **Conjunctive queries + disjunction** is called Existential Positive First-order (EPFO) queries. We’ll refer to them as **AND-OR** queries.
+
+  Can we also design a disjunction operator and embed AND-OR queries in low-dimensional vector space?
+
+  &rarr; No! Intuition: Allowing union over arbitrary queries requires **high-dimensional** embeddings!
+
+  Example 1: Given 3 queries with answer sets $[[q_1]]=\{v_1\}$, $[[q_2]]=\{v_2\}$,$[[q_3]]=\{v_3\}$, If we allow union operation, can we embed them in a two-dimensional plane?
+
+    <img src="src/L5/5.3.18.png" width="400">   
+
+  For 3 points, 2-dimension is okay! How about 4 points?
+
+    <img src="src/L5/5.3.19.png" width="400">   
+
+  Conclusion: Given any *M* conjunctive queries $q_1,...,q_M$ with **non-overlapping** answers, we need dimensionality of Θ(M) to handle all OR
+queries.
+  - For real-world KG, such as FB15k, we find M ≥ 13,365, where |V| = 14,951.
+  - Remember, this is for arbitrary OR queries.
+
+- Embedding AND-OR Queries
+
+  Since we cannot embed AND-OR queries in lowdimensional space, can we still handle them?
+
+  Key Idea: take all unions out and only do union **at the last step**!
+
+  <img src="src/L5/5.3.20.png" width="500"> 
+
+  - Disjunctive Normal Form: Any AND-OR query can be transformed into
+equivalent DNF, i.e., disjunction of conjunctive queries.
+
+    Given any AND-OR query $q$, $q=q_1$ V $q_2$ V ... V $q_m$ where $q_i$ is a conjunctive query.
+
+    Now we can first embed all $q_i$ and then aggregate at the last step!
+
+  - Distance between entity embedding and a DNF $q=q_1$ V $q_2$ V ... V $q_m$ is defined as: $d_{box}(q,v)=min(d_{box}(q_1,v),...,d_{box}(q_m,v))$
+
+    Intuition: 
+    - As long as $v$ is the answer to one conjunctive query $q_i$, then $v$ should be the answer to $q$
+    - As long as $v$ is close to one conjunctive query $q_i$, then $v$ should be close to $q$ in the embedding space.
+
+  - The process of embedding any AND-OR query $q$:
+    1. Transform $q$ to equivalent DNF $q_1$ V $q_2$ V ... V $q_m$
+    2. Embed $q_i$ to $q_m$
+    3. Calculate the (box) distance $d_{box}(q,v)$
+    4. Take the minimum of all distance
+    5. The final score $f_q(v)=-d_{box}(q,v)$
+
+- How to Train Query2box
+
+  - Overview and Intuition (similar to KG completion):
+
+    Given a query embedding $q$, maximize the score $f_q(v)$ for answers $v \in [[q]]$ and minimize the score $f_q(v')$ for answers $v' \notin [[q]]$
+  - Trainable parameters:
+  
