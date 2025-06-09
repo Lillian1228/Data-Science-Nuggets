@@ -899,6 +899,60 @@ equivalent DNF, i.e., disjunction of conjunctive queries.
 
   - Overview and Intuition (similar to KG completion):
 
-    Given a query embedding $q$, maximize the score $f_q(v)$ for answers $v \in [[q]]$ and minimize the score $f_q(v')$ for answers $v' \notin [[q]]$
+    Given a query embedding $q$, maximize the score $f_q(v)$ for answers $v \in [[q]]$ and minimize the score $f_q(v')$ for negative answers $v' \notin [[q]]$
   - Trainable parameters:
+    - Entity embeddings with $d|V|$ # params
+    - Relation embeddings with $2d|R|$ # params
+    - Intersection operator
   
+  - Training Steps: How to achieve a query, its answers, its negative answers from the KG to train the parameters?
+
+    1. Randomly sample a query $q$ from the training graph $G_{train}$, answer $v \in [[q]]_G$ and a negative sample  $v' \notin [[q]]_G$.
+         - Negative sample: entity of same type as $v$ but not answer.
+    2. Embed the query $q$ 
+    3. Calculate the score $f_q(v)$ and $f_q(v')$
+    4. Optimize the loss $l$ to maximize $f_q(v)$ while minimize $f_q(v')$
+        - $l = -log\sigma(f_q(v))-log(1-\sigma(f_q(v')))$
+  - Query Generation from Templates: how can we generate a complex query?
+
+    We start with a **query template**, which can be viewed as an abstraction of the query.
+
+    <img src="src/L5/5.3.21.png" width="400">  
+
+    We generate a query by instantiating every variable with a concrete entity and relation from the KG.
+    - e.g. instantiate Anchor1 with ESR2 (a node on KG) and then instantiate Rel1 with Assoc (an edge on KG).
+
+      <img src="src/L5/5.3.22.png" width="500"> 
+
+    How to instantiate a query template given a KG? &rarr; **Start from the answer node** and iteratively instantiate the other edges and nodes until we ground **all the anchor nodes**
+    - Start from instantiating the root node of the query template. Randomly pick one entity from KG as the root node, e.g. "Fulvestrant".
+    - We instantiate the Projection edge in the template by randomly sample one relation associated with the current entity (Fulvestrant). i.e. we may select "TratedBy" and check what entities are connected to "Fulvestrant" with "TratedBy": {"Breast Cancer"}
+    - We first look at one branch and ground the Projection edge with the relation associated with "Breast Cancer", e.g., "Assoc". Then we check what entities are connected to "Breast Cancer" with "Assoc": {"ESR2"}.
+    - Then we look at the second branch and ground the Projection edge with the relation associated with "Fulvestrant", e.g., "CausedBy". Then we check what entities are connected to Fulvestrant with CausedBy: {Short of Breath}.
+
+    <img src="src/L5/5.3.23.png" width="250"> 
+    <img src="src/L5/5.3.24.png" width="250">
+    <img src="src/L5/5.3.25.png" width="250"> 
+    <img src="src/L5/5.3.26.png" width="250">
+    <img src="src/L5/5.3.27.png" width="250"> 
+
+    - Now we instantiated a query: <img src="src/L5/5.3.28.png" width="350"> 
+      - The query $q$ must have answers on the KG and one of the answers is the instantiated answer node: Fulvestrant.
+      - We may obtain the full set of answers $[[q]]_G$ by KG traversal.
+      - We can sample negative answers $v' \notin [[q]]_G$.
+- Example of Query2box
+
+  Example: “List male instrumentalists who play string instruments”
+
+  We use t-SNE to reduce the embedding space of 14951 entities to a 2-dimensional space, in order to visualize the query results.
+
+  <img src="src/L5/5.3.29.png" width="400"> 
+  <img src="src/L5/5.3.30.png" width="400"> 
+  <img src="src/L5/5.3.31.png" width="400">
+  <img src="src/L5/5.3.32.png" width="400">
+
+- Summary
+
+  We introduce answering predictive queries on large knowledge graphs. The key idea is to embed queries by navigating the embedding space!
+  - We embed the query by composing learned operators
+  - Embedding of the query is close to its answers in the embedding space
