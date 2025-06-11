@@ -419,28 +419,159 @@ that do not contain G.
   - Order embeddings have desirable properties and can be used to encode subgraph relations
   - Neural embedding-guided search in order embedding space can enable ML model to identify motifs much more frequent than existing methods
 
-
-
 ### 6.2 Community Structure in Networks
-
-
-
-
-
 
 #### 6.2.1 Community Detection in Networks
 
+- How does information flow through the network?
 
+    There are different links (“short” vs. “long”) in the network, through which information flows.
 
+    <img src="src/L6/6.2.1.png" width="400">  
+
+- Example: Flow of Job Information
+
+    Mark Granovetter, part of his PhD in 1960s - "How do people find out about new jobs?"
+
+    - People find the information **through personal contacts**. 
+    
+    - But: Contacts were often **acquaintances** rather than close friends
+
+    &rarr; This is surprising: One would expect your friends to help you out more than casual acquaintances. Why is it that acquaintances are most helpful?
+
+    - Granovetter's Answer: Two perspectives on frendships
+
+      - **Structural**: Friendships span different parts of the network
+      - **Interpersonal**: Friendship between two people is either strong or weak
+
+      <img src="src/L6/6.2.2.png" width="300">  
+
+    - Granovetter's Explanation: Granovetter makes a connection between the social and structural role of an edge.       
+      1. Structure:
+           - Structurally embedded (tightly-connected) edges are also socially strong
+           - Long-range edges spanning different parts of the network are socially weak
+      2. Information:
+           - Long-range edges allow you to gather information from different parts of the network and get a job
+           - Structurally embedded edges are heavily redundant in terms of information access
+
+    - How community (tightly-connected cluster of nodes) forms?
+
+        If two people in a network have a friend in common, then there is an increased likelihood they will become friends themselves.
+
+        e.g. Which edge is more likely, a-b or a-c?
+
+        <img src="src/L6/6.2.3.png" width="200"> 
+
+      - Triadic Closure = High clustering coefficient  
+
+        Reasons for triadic closure: If B and C have a friend A in common, then
+
+        &rarr; B is more likely to meet C (since they both spend time with A)
+
+        &rarr; B and C trust each other (since they have a friend in common)
+
+        &rarr; A has incentive to bring B and C together (since it is hard for A to maintain two disjoint relationships)
+
+      - Empirical study by Bearman and Moody: Teenage girls with low clustering coefficient are more likely to contemplate suicide
+
+- Edge Strength in Real Data
+
+    - For many years Granovetter’s theory was not tested. But, today we have large who-talks-to-whom graphs: Email, Messenger, Cell phones, Facebook
+
+    - Edge Overlap: 
+
+        <img src="src/L6/6.2.4.png" width="500">       
+
+    - Onnela et al. 2007: 
+      - Cell-phone network of 20% of EU country’s population
+      - Edge weight (strength): # phone calls
+      - Observation: Highly used links have high overlap!
+
+        <img src="src/L6/6.2.5.png" width="300"> 
+
+        True: the real data
+
+        Permuted strengths: Keep the network structure but randomly reassign edge strengths
+
+- Edge Removal Based on Strength: Low to high, or, High to low
+
+    <img src="src/L6/6.2.6.png" width="500">
+
+- Edge Removal Based on Overlap: Low to high, or, High to low
+
+    <img src="src/L6/6.2.7.png" width="500"> 
 
 
 #### 6.2.2 Network Communities
 
+Granovetter’s theory suggests that networks are composed of **tightly connected sets of nodes (communities)**:
 
+<img src="src/L6/6.2.8.png" width="400"> 
 
+Network communities (or clusters, groups, modules): Sets of nodes with **lots of internal** connections and **few external** ones (to the rest of the network).
 
+- Ideally such automatically detected clusters would then correspond to real groups.
 
+    - Social Network - Zachary's Karate club network
+      - Observed social ties & rivalries in a university karate club
+      - During the study, conflicts led the group to split
+      - Split could be explained by a minimum cut in the network
+  
+      <img src="src/L6/6.2.9.png" width="400">  
 
+    - Micro-Markets in Sponsored Search
+      - Find micro-markets by partitioning the “query-to-advertiser” graph in web search:
+      - Nodes: advertisers and queries/keywords
+      - Edges: Advertiser advertising on a keyword.
+
+      <img src="src/L6/6.2.10.png" width="300"> 
+
+    - NCAA Football Network: Can we identify node groups? (communities, modules, clusters)
+
+      <img src="src/L6/6.2.11.png" width="500">
+
+- Define: Modularity $Q$
+
+    A measure of how well a network is partitioned into communities
+
+    Given a partitioning of the network into groups disjoint $s ∈ S$:
+
+    <img src="src/L6/6.2.12.png" width="400">
+
+    - Null Model: Configuration Model
+
+        Given real $G$ on $n$ nodes and $m$ edges, construct rewired network $G'$:
+      - **Same degree distribution** but uniformly random connections
+      - Consider $G'$ as a **multigraph** (multiple edges exist between nodes)
+      - The expected number of edges between nodes i and j of degrees $k_i$ and $k_j$ equals: <img src="src/L6/6.2.13.png" width="100">
+
+        - There are $2m$ directed edges (counting i->j and j->i) in total.
+        - For each of $k_i$ out-going edges from node $i$, the chance of it
+landing to node $j$ is $k_j/2m$, hence $k_ik_j/2m$.
+        - The expected number of edges in (multigraph) G’:
+
+            <img src="src/L6/6.2.14.png" width="400">
+
+    - Under null model, both the degree distribution and the total number of edges are preserved.
+
+        Notice: This model applies to both weighted and unweighted networks. For weighted networks we use the weighted degree (sum of the edge weights).
+
+    - Modularity of partitioning S of graph G:
+
+        <img src="src/L6/6.2.15.png" width="400"> 
+        
+        $A_{ij}=1$ if i&rarr;j, 0 otherwise (if G is weighted then $A_{ij}$ is the edge weight)
+
+    - Modularity values take range [-1,1]:
+        - It is positive if the number of edges within groups exceeds the expected number
+        - Q greater than **0.3-0.7** means **significant community structure**
+
+    - Equivalently modularity can be written as:
+
+        <img src="src/L6/6.2.16.png" width="500">
+
+        Idea: We can identify communities by maximizing modularity.
+        
 #### 6.2.3 Louvain Algorithm
 
 
