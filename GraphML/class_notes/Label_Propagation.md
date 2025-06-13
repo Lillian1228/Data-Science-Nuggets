@@ -207,7 +207,7 @@ Setting: A partially labeled graph and features over nodes.
 
            $E^{(t+1)}$ &larr; $(1-a)$ &sdot; $E^{(t)}+a$ &sdot; &Atilde; $E^{(t)}$
 
-           Assmuption: Prediction erros are similar for nearby nodes.
+           Assmuption: Prediction errors are similar for nearby nodes.
 
            <img src="src/L4/4.1.18.png" width="500"> 
 
