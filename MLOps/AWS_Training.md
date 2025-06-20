@@ -153,3 +153,178 @@ You must also add the code required to perform inference using a web application
     - Training data – Amazon S3 will provide this functionality.
     - Orchestration – AWS Step Functions will provide this functionality.
     - Testing and evaluation – AWS Lambda will provide this functionality
+
+
+### 4. Reliable MLOps
+
+The components of reliable MLOps are automated testing, using multiple accounts and monitoring
+
+#### 4.1 Resource Scaling Strategy
+
+- Cost-efficient endpoint options for deploying multiple models
+
+    <img src="src/M3_6.png" width="600"> 
+
+- Considerations for your scaling strategy
+
+    - Request pattern: Understanding the patterns of the your workload is key to setting up efficient auto scaling. As soon as you understand request patterns, you can determine which metrics these patterns affect the most. 
+    - Metric assessment: Which metric is the inference logic sensitive to (such as GPUUtilization, CPUUtilization, MemoryUtilization, or Invocations) per instance? Is the inference logic GPU bound, memory bound, or CPU bound?
+    - Cooldown durations: The cooldown period helps to prevent continuous scale-in or scale-out events. This period helps your instances to start handling traffic before another scaling action occurs.
+    - Policy test: You should also should plan to test your scaling policies to evaluate the expected outcome of both increasing and decreasing capacity on your endpoint. Are your policies starting scale-out actions early enough to provide additional capacity as it is needed? Are they timing scale-in actions to minimize the cost of unused capacity?
+
+- Methods for Scaling SageMaker Resources
+
+    - Target tracking: Scale based on a specificAmazon CloudWatch metric (policy) .
+        1. Select a scaling metric i.e. average number of times per minute that each instance for a variant is invoked.
+        2. Set the target value for the metric
+        3. SageMaker manages autoscaling
+
+    - Step: Advanced type of scaling. Define additional policies to dynamically adjust instances based on the size of the alarm breach (policy). 
+        1. choose scaling metrics and threshold values for the CloudWatch alarms that invoke the scaling process
+        2. define how your scalable target should be scaled when a threshold is in breach for a specified number of evaluation periods
+
+        <img src="src/M3_7.png" width="500">  
+
+    - Scheduled: Supports a one-time schedule, a recurring schedule, or cron expressions (policy).
+        - You can scale your endpoint in response to predictable load changes at a specific date and time
+    - On-demand: Increase or decrease the number of instances manually i.e. new product launch, traffic spikes (ticket sales for an event), special promotions or ad campaigns.
+
+- Multi-account Strategy: Organizing ML workloads over multiple accounts
+
+    <img src="src/M3_8.png" width="500">  
+
+#### 4.2 Automated Testing
+- Integration Testing 
+
+    Integration tests focus on validating that the different steps in your pipelines interact well and that outputs flow correctly from one step to the next. 
+
+    <img src="src/M3_9.png" width="500">  
+
+    - Data processing integration test consideration: 
+        - Verify that the output data from this step is in the expected format, for example, all expected transformations have been applied.
+        - Test whether the processed data correctly feeds into the model building step.
+    - Docker build data processing integration test consideration: 
+        - The image builds successfully and includes all necessary dependencies. 
+    - Model building, training, and evaluation integration test consideration:
+        - The model building process successfully takes input from the data processing step. 
+        - The training step correctly picks up the model and the data for training. 
+        - Validate that the evaluation step can access the trained model and generate a performance report.
+    - Model registration integration test consideration: 
+        - Test that the model registration component can correctly receive and register the trained model from the previous step.  
+        - Check that versioning works correctly.
+        - Verify that metadata is captured. 
+    - Model deployment pipeline integration test consideration: 
+        - Validate that the deployment process correctly pulls the model from the model registry and successfully deploys it to the target environment. 
+        - Ensure that, post-deployment, the model is accessible for inference.
+    - Monitoring pipeline integration test consideration: 
+        - Test that the monitoring process can correctly access the deployed model&apos;s performance metrics. 
+        - Ensure that it can correctly log or report this information for further
+
+- Stress and load testing
+
+    - Simulates heavy inputs and Reveals system limits
+    - Aids in performance optimization
+    - Evaluates system scalability and resilience
+    - Is automated by using SageMaker Inference Recommender
+
+- Testing production model against replacement - “Should we continue with the current production model or deploy the new one?”
+
+    1. A/B testing: 
+        - The inference requests are randomly routed to A (current production variant) or B (candidate variant). 
+        - This method is directly supported by the traffic-routing capabilities of the multi-model endpoint deployment in SageMaker. Here, you could set the traffic routing weights to 0.5 (or 50 percent) for both endpoint variants.
+    2. Shadow testing:
+        - the production model and candidate replacement model are tested with live data side-by-side, but on a dedicated environment for testing. 
+        - Live production data is feeding these tests, but the responses do not impact the production system. 
+
+         <img src="src/M3_11.png" width="500">  
+    
+    Two options for routing requests: weighted or targeted
+
+
+
+- Traffic shifting strategies for model deployment
+
+    1. All at once: Shifts all of the traffic to the new fleet in a single step.
+
+        <img src="src/M3_12.png" width="500">  
+
+        The baking period feature helps you to monitor the performance and functionality of your new instances before terminating your old instances. Thus, it ensures that your new fleet is fully operational.
+
+    2. Canary: Traffic shifts in two steps. Test a portion of your endpoint traffic on the new fleet while the old fleet serves the remaining traffic.
+        - Canary traffic shifting provides you with more safety during your deployment because any issues with the updated model only impact the canary.
+
+        <img src="src/M3_13.png" width="500"> 
+
+    3. Linear: A fixed portion of the traffic shifts in a pre-specified number of equally spaced steps.
+
+        <img src="src/M3_14.png" width="500"> 
+
+        - minimizes the chance of a disruption to your endpoint
+        - gives you the most granular control over traffic shifting
+    - Decide which approach is right for your specific use case
+
+        - All at once: Use this option to minimize update time and cost.
+        - Canary: Use this option to balance between minimizing the impact of regressive updates and the time that two fleets are operational.
+        - Linear: Use this option to minimize risk by spreading out deployment across multiple steps.
+
+#### 4.3 Monitoring
+
+Monitoring in machine learning encompasses hosting infrastructure, model performance, and data quality. 
+
+1. Hosting infrastructure
+
+    - Monitoring endpoint metrics
+
+    <img src="src/M3_15.png" width="500">  
+
+    - Monitoring SageMaker model endpoint resources
+
+    <img src="src/M3_16.png" width="500">  
+
+    SageMaker uses infrastructure metrics such as instance utilization to drive automatic scaling of hosting instances. Data about these scaling events are also recorded in CloudWatch. SageMaker delivers status change events, including security-related events to EventBridge, in near-real time. 
+
+    - Case study: How would these metrics affect KPIs of listening time for a music playlist
+
+        <img src="src/M3_17.png" width="500">   
+
+2. Model Performance and Data Quality
+
+    Potential causes for changes in data quality include shifting data characteristics, changing environmental factors, or changing relationships among features. These changes might be temporary (for example, because of some short-lived, real-world events) or permanent. 
+
+    In order to monitor model quality metrics, you need ground truth data to compare to the model predictions. Ground truth data might be the same (or similar to) the business KPIs. 
+
+    - 4 Types of Drift Dectable in the Monitoring Phase
+
+        - Data quality drift – Production data distribution differs from data that is used for training.
+        - Model quality drift – Predictions that a model makes differ from actual ground truth labels that the model attempts to predict.
+        - Feature attribution drift – The contribution of individual features to model predictions differs from the baseline that was established during model training.
+        - Bias drift – Bias was introduced because of change in production data distribution or application
+
+            <img src="src/M3_18.png" width="500">  
+
+            Bias occurs when an ML model produces results that are systematically prejudiced because of erroneous assumptions i.e. biased datasets in the ML process.
+
+            Bias drift represents an increase in the bias that affects predictions that the model makes over time. Bias drift can be introduced by changes in the live data distribution, such as:
+            - Bias could be present in data that is used to train the model. For example, training data is too small or not representative of live data, and cannot teach the model. Training data incorporates existing societal assumptions, which introduces those biases into the model. An important data point is excluded from training data because of lack of recognition of its importance.
+            - The selected algorithm incorporates assumptions that produce incorrect results for one or more groups.
+            - Bias could result from the way that the model is deployed. For example, a blue/green deployment scenario might differentiate which model a user interacts with, based on the user’s location. In this case, the user populations that access the two models might be significantly different.
+            - Bias could be introduced in the real-world data that the model interacts with. After an ML model is deployed in production, the real-world data might start to differ from the data that was used to train the model. As a result, it might lead to deviations in model quality and (eventually) less accurate models. This outcome is data drift. For example, input data units might change from Fahrenheit to Celsius. Or, all of a sudden, null values might come in and impact model quality. Or, retail consumer purchase preferences might change over time. Changes that impact different populations differently can be  a source of bias.
+    - To use SageMaker Model Monitor, you must complete the following steps:
+        1. Characterize the baseline statistics and constraints.
+
+            The output of the baseline job consists of two files:
+
+            - constraints.json – Lists the features with inferred data type, and completeness for each.
+            - statistics.json – Provides statistical analysis of each feature in the dataset. Data includes count, missing data, mean, sum, standard deviation, minimum, maximum, and distribution.
+
+            <img src="src/M3_19.png" width="400">   
+
+        2. Configure and run data capture.
+
+            <img src="src/M3_20.png" width="400"> 
+
+            Data capture condiguration is specified when deploying an endpoint. 
+
+        3. Schedule or run your monitoring jobs. 
+
+            <img src="src/M3_21.png" width="400">  
