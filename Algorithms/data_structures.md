@@ -577,10 +577,13 @@ While chaining and linear probing methods can resolve hash collisions, they may 
   3) The number of nodes from the root to the bottommost leaf node is referred to as the maximum depth/height of the binary tree.
 
 - Perfect Binary Tree: every level is fully filled, and the entire tree resembles an equilateral triangle. Its node  count is simply $2^h - 1$, where the depth is h. 
+  
+  <img src="src/binary_tree1.png" width="300">
 
-  ![eg](src/binary_tree1.png)
 - Complete Binary Tree: all levels are fully filled except possibly the last, and all nodes are as far left as possible.
-  ![eg](src/binary_tree2.png)
+  
+  <img src="src/binary_tree2.png" width="300">
+
   - a perfect binary tree is a special case of a complete binary tree.
   - A characteristic of complete binary trees is that their nodes are compactly arranged, and if we number the nodes from left to right, top to bottom, there is a clear pattern in the indices of parent and child nodes.
   - At least one of the subtrees of a complete binary tree is a perfect binary tree. This property is useful in algorithm problems
@@ -650,7 +653,9 @@ def traverse(root: TreeNode):
 The traversal order of the traverse function is to keep moving to the left child node until it encounters a null pointer and can't go further, then it tries to move one step to the right child node; then it tries moving left again, repeating this cycle. If both left and right subtrees are done, it returns to the parent node.
 
 The order in which the traverse function visits nodes is fixed. However, the effect can vary depending on where you write the code within the traverse function. 
-![eg](src/binary_tree4.png)
+
+<img src="src/binary_tree4.png" width="300">
+
 
 ![eg](src/binary_tree5.png)
 
