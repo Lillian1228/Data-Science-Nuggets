@@ -82,16 +82,17 @@ Cons: Since elements are not adjacent, if you want to access the 3rd element in 
 
 Below is an example of a singly linked list. Notice the last node always points to null, meaning there're no more reference nodes afterwards.
 
-![eg](src/linkedlist1.png)
+<img src="src/linkedlist1.png" width="500"/>
 
 - Where are linked lists used?
 
-![eg](src/linkedlist2.png)
+  <img src="src/linkedlist2.png" width="400"/>
 
 - Terminology
 
-![eg](src/linkedlist3.png)
-![eg](src/linkedlist4.png)
+  <img src="src/linkedlist3.png" width="500"/>
+  <img src="src/linkedlist4.png" width="500"/>
+
 
 #### 2.2.2 Basic Operations of Singly Linked Lists
 
@@ -110,7 +111,8 @@ def createLinkedList(arr: 'list[int]') -> 'ListNode':
     return None
   
   head = ListNode(arr[0])
-  cur = head # traverse the linked list without losing reference to the head
+  # traverse the linked list without losing reference to the head
+  cur = head 
   for i in range(1, len(arr)):
     cur.next = ListNode(arr[i]) # link the new element
     cur = cur.next # move pointer to the next node until finishing the entire list
@@ -229,7 +231,9 @@ while p:
   p = p.next
 
 # traverse from tail to head
+p = tail
 while p:
+  head = p
   p = p.prev
 ```
 3. Insertion
@@ -258,7 +262,7 @@ tail = newNode
 p = head
 for i in range(2):
   p = p.next
-# asseble the new node
+# assemble the new node
 new_node = DoublyListNode(66)
 new_node.next = p.next
 new_node.prev = p
@@ -269,7 +273,7 @@ p.next = new_node
 
 # now the linked list becomes 1 -> 2 -> 3 -> 66 -> 4 -> 5
 ```
-4. Deletion
+4. Deletion: make sure to clear the pointer of deleted nodes as well
 ```Python
 head = createDoublyLinkedList([1, 2, 3, 4, 5])
 
@@ -309,7 +313,11 @@ toDelete.prev = None
 # now the list becomes 1 -> 2 -> 3 -> 5
 ```
 
-![eg](src/linkedlist5.png)
+|          | Singly Linked  | Doubly Linked   |
+| -------- | ------- | ------- |
+| Remove at head  | O(1)    | O(1)    |
+| Remove at tail | O(n)    | O(1)    |
+| Remove in middle | O(n)    | O(n)    |
 
 #### 2.3 Array vs Linked List Comparison
 
