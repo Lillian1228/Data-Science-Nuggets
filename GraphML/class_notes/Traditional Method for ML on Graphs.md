@@ -21,11 +21,12 @@ Design choices:
 - Objects: Nodes, edges, sets of nodes, entire graphs
 - Objective function: What task are we aiming to solve?
 
-### Node-level Tasks and Features
+### 1.1.1 Node-level Tasks and Features
 
 Goal: Characterize the structure and position of a node in the network.
 
 - **Node degree $k_v$**: number of edges the node has (treating all neighboring nodes equally)
+  
   <img src="src/1.1_3.png" width="300">
 
     Node degree counts the neighboring nodes without capturing their importance.
@@ -40,19 +41,21 @@ Goal: Characterize the structure and position of a node in the network.
   <img src="src/1.1_6.png" width="500">
 
 - **Clustering Coefficient $e_v$**: measures how connected a node v's neighboring nodes are.
+  - $e_v=0$ means none of your friends know each other, whereas 1 means all your friends are also friends with each other.
+ 
   <img src="src/1.1_7.png" width="500">
 
 - Graphlets
 
-    Observation: Clustering coefficient counts the #(triangles) in the ego-network.
+    Observation: Clustering coefficient counts the #(triangles) in the ego-network. Triangles are especially common in social networks.
 
     <img src="src/1.1_8.png" width="500">
 
-    We can generalize the above by counting #(pre-specified subgraphs, i.e. graphlets).
+    We can generalize the above by counting #(pre-specified subgraphs, i.e. graphlets) beyond just the triangles.
 
     <img src="src/1.1_9.png" width="500">
 
-    **Graphlet Degree Vector (GDV)**: counts #(graphlets) that a node touches.
+    - **Graphlet Degree Vector (GDV)**: counts #(graphlets) that a node touches.
 
     In comparison, Degree counts #(edges) that a node touches. Clustering coefficient counts #(triangles) that a node touches.
 
@@ -66,10 +69,10 @@ Goal: Characterize the structure and position of a node in the network.
     - Comparing vectors of two nodes provides a more detailed measure of local topological similarity than node degrees or clustering coefficient.
 
 - Feature Summary
-    - Importance-based features: capture the importance of a nodel in a graph. i.e. node degree, node centrality.
+    - **Importance-based** features: capture the importance of a nodel in a graph. i.e. node degree, node centrality.
         
         Useful for predicting influential nodes in a graph. i.e. predicting celebrity users in a social network.
-    - Structure-based features: capture topological properties of local neighborhood around a node.
+    - **Structure-based** features: capture topological properties of local neighborhood around a node.
         - node degree: number of neighboring nodes
         - clustering coefficient: how connected neighboring nodes are
         - graphlet degree vector: counts the occurrences of different graphlets
@@ -78,7 +81,7 @@ Goal: Characterize the structure and position of a node in the network.
 
 <img src="src/1.1_11.png" width="500">
 
-### Link Prediction Task and Features
+### 1.1.2 Link Prediction Task and Features
 
 Goal: Predict new links based on existing links.
 
@@ -88,6 +91,9 @@ The key is to design features for a pair of nodes.
 
 <img src="src/1.1_12.png" width="500">
 
+1st approach is better suited for static networks like protein structure, etc. 2nd approach is good for networks that will evolve over time like social networks.
+
+
 #### Methodology - Link Prediction via Proximity
 
 1. For each pair of nodes (x,y) compute score c(x,y). i.e. c(x,y) could be the # of common neighbors of x and y.
@@ -95,7 +101,7 @@ The key is to design features for a pair of nodes.
 3. Predict top n pairs as new links
 4. See which of these links actually appear in $G[t_1,t'_1]$
 
-#### Link-level Features
+#### Link-level Features: describe the relationships between nodes
 
 - Distance-based features
 
@@ -128,7 +134,7 @@ The key is to design features for a pair of nodes.
     <img src="src/1.1_17.png" width="500">
     <img src="src/1.1_18.png" width="500">
 
-### Graph-Level Features and Graph Kernels
+### 1.1.3 Graph-Level Features and Graph Kernels
 
 Goal: We want features that characterize the structure of an entire graph.
 
@@ -138,7 +144,7 @@ Idea: Design kernels instead of feature vectors.
 
 <img src="src/1.1_19.png" width="500">
 
-Graph Kernels: Measure similarity between two graphs.
+#### Graph Kernels: Measure similarity between two graphs.
 - Graphlet Kernel [1]
 - Weisfeiler-Lehman Kernel [2]
 - Other kernels are also proposed in the literature (beyond the scope of this lecture)
@@ -146,7 +152,7 @@ Graph Kernels: Measure similarity between two graphs.
     - Shortest-path graph kernel
     - And many more…
 
-Key Idea of Graph Kernel: Bag-of-* as the feature vector
+Key Idea of Graph Kernel: **Bag-of-*** as the feature vector
 
 <img src="src/1.1_20.png" width="500">
 <img src="src/1.1_21.png" width="500">
@@ -157,7 +163,7 @@ Key Idea of Graph Kernel: Bag-of-* as the feature vector
 
     Note: Definition of graphlets here is slightly different from node-level features.
 
-    - Nodes in graphlets do not need to be connected (allows for isolated nodes)
+    - Nodes in graphlets here do not need to be connected (allows for isolated nodes)
     - The graphlets here are not rooted.
 
     <img src="src/1.1_22.png" width="400">
@@ -168,11 +174,11 @@ Key Idea of Graph Kernel: Bag-of-* as the feature vector
     <img src="src/1.1_24.png" width="400">
 
     Limitations: Counting graphlets is expensive!
-    - Counting size-k graphlets for a graph with size n by enumeration takes $n^k$.
+    - Counting size-k graphlets for a graph with size n by enumeration takes $n^k$ (exponential in the number of nodes).
     - This is unavoidable in the worst-case since subgraph isomorphism test (judging whether a graph is a subgraph of another graph) is NP-hard.
     - If a graph’s node degree is bounded by d, an $O(nd^{k-1})$ algorithm exists to count all the graphlets of size k.
 
-- Weisfeiler-Lehman Kernel
+- Weisfeiler-Lehman Kernel (More Efficient)
 
     <img src="src/1.1_25.png" width="400">
 
@@ -184,9 +190,11 @@ Key Idea of Graph Kernel: Bag-of-* as the feature vector
     <img src="src/1.1_29.png" width="500">
 
     After color refinement, WL kernel counts number of nodes with a given color.
+
     <img src="src/1.1_30.png" width="400">
 
-    The WL kernel value is computed by the inner product of the color count vectors:
+    The WL kernel value is computed by the inner product of the color count vectors (feature descriptors):
+
     <img src="src/1.1_31.png" width="300">
 
     WL kernel is computationally efficient
@@ -205,19 +213,28 @@ Key Idea of Graph Kernel: Bag-of-* as the feature vector
 
 ### 1.2 Node Embeddings
 
+Traditional ML for Graphs: Given an input graph, extract node, link and graph-level features, learn a model (SVM, neural network, etc.) that maps features to labels.
+
+<img src="src/1.2_0.png" width="500"> 
+
 #### 1.2.1 Graph Representation Learning
 
 Goal: Efficient task-independent feature learning for machine learning with graphs to alleviate the need to do feature engineering every single time.
 
+<img src="src/1.2_0_1.png" width="500"> 
+
 <img src="src/1.2_1.png" width="500">
 
-Task: map nodes into an embedding space
+Task: map nodes into a d-dimensional embedding space
 - Similarity of embeddings between nodes indicates their similarity in the network.
 - Encode network information
 - Potentially used for many downstream predictions
 
 <img src="src/1.2_2.png" width="500">
-<img src="src/1.2_3.png" width="500">
+
+- Example of node embedding
+  
+  <img src="src/1.2_3.png" width="400">
 
 #### 1.2.2 Encoder-Decoder Framework
 
@@ -225,7 +242,8 @@ Setup: Assume we have a graph G, where
 - V is the vertex set
 - A is the adjacency matrix (assume binary)
 - For simplicity: no node features or extra info is used.
-<img src="src/1.2_4.png" width="400">
+
+  <img src="src/1.2_4.png" width="400">
 
 Goal: encode nodes so that similarity in the embedding space (i.e. dot product) approximates similarity in the graph.
 
@@ -237,6 +255,9 @@ Goal: encode nodes so that similarity in the embedding space (i.e. dot product) 
     <img src="src/1.2_5.png" width="400">
     <img src="src/1.2_6.png" width="400">
 
+    Why do we use dot-product as the simple decoder: 
+    - Dot-product is a common measure of vector similarity as it calculates the cosine angle of two vectors. 
+
 - "Shallow" Encoding - Simplest encoding approach: encoder is just an embedding-lookup.
         
     ENC(v) = $z_v$ = $Z \cdot v$
@@ -245,6 +266,8 @@ Goal: encode nodes so that similarity in the embedding space (i.e. dot product) 
     <img src="src/1.2_8.png" width="400">
 
     Each node is assigned a unique embedding vector. i.e. we directly optimize the embedding of each node.
+
+    Scalability issue: The size of the embedding matrix depends on the number of nodes in a graph, which can surge quickly as the graph grows. 
 
     Many methods: DeepWalk, node2vec
 
@@ -284,7 +307,7 @@ $z^T_vz_u$ is essentially the probability that u and v co-occur on a random walk
 
 Random-Walk Embeddings: 
 
-<img src="src/1.2_11.png" width="500">
+<img src="src/1.2_11.png" width="450">
 
 Why Random Walks?
 - Expressivity: Flexible stochastic definition of node similarity that incorporates both local and higher-order neighborhood information.
@@ -292,7 +315,7 @@ Why Random Walks?
     Idea: if random walk starting from node u visits v with high probability, u and v are similar (high-order multi-hop info)
 - Efficiency: Do not need to consider all node pairs when training; only need to consider pairs that co-occur on random walks.
 
-Feature Learning as Optimization:
+Unsupervised Feature Learning as Optimization:
 
 - Intuition: Find embedding of nodes in d-dimensional space that preserves similarity
 - Idea: Learn node embedding such that nearby nodes are close together in the network
@@ -318,6 +341,8 @@ some random walk strategy R
 
 - **Negative Sampling**: allows for quick likelihood calculation.
 
+    Intuition: to maximize the log probability of softmax, rather than summing over all the nodes, we only sum over a subset of randomly sampled negative nodes.
+
     <img src="src/1.2_17.png" width="500"> 
 
     New formulation corresponds to using a logistic regression (sigmoid func.) to distinguish the target node 𝑣 from nodes $𝑛_𝑖$ sampled from background distribution $𝑃_𝑣$.
@@ -330,19 +355,20 @@ some random walk strategy R
 
     <img src="src/1.2_19.png" width="500"> 
 
-    **Stochastic Gradient Descent (SGD)**: Instead of evaluating gradients over all examples, evaluate it for each individual training example.
+    **Stochastic Gradient Descent (SGD)**: Instead of evaluating gradients over all examples, evaluate it for each individual training example i.e. a node.
 
     <img src="src/1.2_20.png" width="500">   
+
 
 - How should we randomly walk? 
 
     So far we have described how to optimize embeddings given a random walk strategy R. 
-    What strategies should we useto run random walks?
+    What strategies should we use to run random walks?
 
     - Simplest idea: Just run fixed-length, unbiased random walks starting from each node. 
     - The issue is that such notion of similarity is too constrained
 
-    How can we genralize this? -> node2vec
+    How can we genralize this? &rarr; node2vec
 
 - Overview of **node2vec**
 
@@ -352,17 +378,19 @@ some random walk strategy R
 
     Key observation: Compared to rigid notions, flexible notion of network neighborhood $N_R(u)$ of node u leads to rich node embeddings.
 
-    Idea: use **flexible, biased random walks that can trade off between local and global views of the network** to generate diverse network neighborhood $N_R(u)$ of node u.
+    Develop biased 2nd order random walk R to generate network neighborhood $N_R(u)$ of node u.
 
 - Biased Walks
+
+    Idea: use **flexible, biased random walks that can trade off between local and global views of the network** to generate diverse network neighborhood $N_R(u)$ of node u.
 
     <img src="src/1.2_21.png" width="500">  
 
     Biased fixed-length random walk R that given a node u generates neighborhood $N_R(u)$ have
     
     Two parameters:
-    - Return parameter p: return back to the previous node
-    - In-out parameter q: moving outwards (DFS) vs inwards (BFS). Intuitively, q is the "ratio" of BFS vs. DFS.
+    - **Return parameter p**: return back to the previous node
+    - **In-out parameter q**: moving outwards (DFS) vs inwards (BFS). Intuitively, q is the "ratio" of BFS vs. DFS.
 
     Illustration of Biased 2nd-order random walks:
     - Idea: Remember where the walk came from
@@ -379,8 +407,10 @@ some random walk strategy R
   3. Optimize the node2vec objective using Stochastic Gradient Descent
    
     Computational Advantages:
-    - Linear-time complexity
+    - Linear-time complexity: for every node we have a fixed set of random walks so the optimization is linear to the size of the graph. 
     - All 3 steps are individually parallelizable
+
+    Limitation: we need to learn embeddings for each inidividual node so it may not be scalable for huge graphs.
     
     More at [node2vec: Scalable Feature Learning for Networks](https://cs.stanford.edu/%7Ejure/pubs/node2vec-kdd16.pdf)
 
@@ -390,7 +420,7 @@ some random walk strategy R
 
     Different notions of node similarity:
     - Naive: similar if 2 nodes are connected
-    - Neighborhood overlap
+    - Neighborhood overlap (covered in prior Lecture)
     - Random walk approaches - generally more efficient
   
     No one method wins in all cases. E.g., node2vec performs better on node classification while alternative methods perform better on link prediction. More at [Graph Embedding Techniques, Applications, and Performance: A Survey](https://arxiv.org/pdf/1705.02801)
@@ -407,15 +437,19 @@ Example Tasks: Classifying toxic vs. non-toxic molecules; Identifying anomalous 
 
 - Approach 1: (Simple but Efficient) Embed nodes and sum/avg them
 
-    1) Run a standard graph embedding technique on the (sub)graph G.
+    1) Run a standard node embedding technique on the (sub)graph G.
 
     2) Then **sum (or average) the node embeddings** in the graph G.
    
         <img src="src/1.2_26.png" width="100"> 
 
-- Approach 2: Introduce a "virtual node" that spans the (sub)graph and then embed that node.
+    Used by Duvenaud et al., 2016 to classify molecules based on their graph structure
+
+- Approach 2: Introduce a **"virtual node"** that spans the (sub)graph and then embed that node.
   
   <img src="src/1.2_27.png" width="400">  
+
+  Proposed by Li et al., 2016 as a general technique for subgraph embedding
 
 - Approach 3: Anonymous Walk Embeddings
 
@@ -445,19 +479,30 @@ Example Tasks: Classifying toxic vs. non-toxic molecules; Identifying anomalous 
       - Represent the graph as a probability distribution over these walks
       - How many random walks m do we need?
   
-    <img src="src/1.2_31.png" width="500"> 
+      <img src="src/1.2_31.png" width="500"> 
 
-  Embedding Idea 2: Learn graph embedding together with anonymous walk embeddings.  
+  Embedding Idea 2: Rather than simply represent each walk by the fration of times it occurs, we learn graph embedding $z_G$ together with anonymous walk embeddings $z_i$.  
   - Learn Walk Embeddings
-    - Idea: Embed walks subject to the next walk can be predicted.
+    - $𝒁 = \{𝒛_𝒊: 𝑖 = 1 … 𝜂\}$, where 𝜂 is the number of sampled anonymous walks $w_i$.
+    - Idea: Embed walks so that the next adjacent walk can be predicted.
 
     <img src="src/1.2_32.png" width="500"> 
     <img src="src/1.2_33.png" width="500"> 
+
+    Note: neighborhood is defined as a set of anonymous walks starting node u.
+
     <img src="src/1.2_34.png" width="500"> 
 
-- More advanced graog embedding approaches in later chapters, such as:
+- Graph Embedding Summary
+  - Approach 1: Embed nodes and sum/avg them
+  - Approach 2: Create super-node that spans the (sub) graph and then embed that node.
+  - Approach 3: Anonymous Walk Embeddings
+    - Idea 1: Sample the anon. walks and represent the graph as fraction of times each anon walk occurs.
+    - Idea 2: Learn graph embedding together with anonymous walk embeddings.
+
+  - More advanced graph embedding approaches in later chapters, such as:
   
-  Hierarchical Embeddings: hierarchically cluster nodes in graphs, and sum/avg the node embeddings according to these clusters.
+    Hierarchical Embeddings: hierarchically cluster nodes in graphs, and sum/avg the node embeddings according to these clusters.
 
     <img src="src/1.2_35.png" width="500">  
 
@@ -466,8 +511,22 @@ Example Tasks: Classifying toxic vs. non-toxic molecules; Identifying anomalous 
 - Clustering/community detection: Cluster points $z_i$
 - Node classification: Predict label of node i based on $z_i$
 - Link prediction: Predict edge (i,j) based on ($z_i$, $z_j$), where we can concatenate, average, product, or take a difference between the embeddings.
+  
     <img src="src/1.2_36.png" width="500">  
+
+  Concatenation is a good option for directed graphs as it can differentiate the direction between i and j.
+
 - Graph classification: graph embedding $z_G$ via aggregating node embeddings or anonymous random walks. Predict label based on graph embedding $z_G$.
+
+#### Summary
+
+We discussed graph representation learning, a way to learn node and graph embeddings for downstream tasks, without feature engineering.
+- Encoder-decoder framework:
+  - Encoder: embedding lookup
+  - Decoder: **predict score based on embedding to match node similarity**
+- Node similarity measure: (biased) random walk
+  - Examples: DeepWalk, Node2Vec
+- Extension to Graph embedding: Node embedding aggregation and Anonymous Walk Embeddings
   
 ### 1.3 Link Analysis: PageRank, Random Walks, and Embeddings
 
