@@ -528,12 +528,14 @@ We discussed graph representation learning, a way to learn node and graph embedd
   - Examples: DeepWalk, Node2Vec
 - Extension to Graph embedding: Node embedding aggregation and Anonymous Walk Embeddings
   
-### 1.3 Link Analysis: PageRank, Random Walks, and Embeddings
+### 1.3 Graph as Matrix: PageRank, Random Walks, and Embeddings
 
 Treating a graph as a matrix allows us to:
-- Determine node importance via random walk (PageRank)
-- Obtain node embeddings via matrix factorization (MF)
+- Determine node importance via **random walk (PageRank)**
+- Obtain node embeddings via **matrix factorization (MF)**
 - View other node embeddins (i.e. node2vec) as MF
+
+&rarr; Random walk, matrix factorization and node embeddings are closely related!
 
 #### 1.3.1 PageRank (aka the Google Algorithm)
 
@@ -541,7 +543,7 @@ Example: The Web as a Directed Graph
 
 <img src="src/1.3.1.png" width="500">  
 
-In early days the web links were navigational. Toay many links are transactional - used not to navigate from page to page, but to post, comment, like, buy ...
+In early days the web links were **navigational**. Today many links are **transactional** - used not to navigate from page to page, but to post, comment, like, buy ...
 
 - Ranking Nodes on the Graph
 
@@ -554,13 +556,13 @@ In early days the web links were navigational. Toay many links are transactional
   
 - Idea: Links as Votes
   - Page is more important if it has more links (incoming or outgoing). 
-  - Links from important pages count more
+  - In-links are more difficult to fake. Links from important pages count more.
   - Recursive question
   
 - PageRank: The "Flow" Model
   
   A "vote" from an important page is worth more:
-  - Each link's vote is proportional to the importance of its source page
+  - Each link's vote is proportional to the **importance** of its source page
   - If page i with importance $r_i$ has $d_i$ out-links, each link gets $r_i$/$d_i$ votes
   - Page j's own importance $r_j$ is the sum of the votes on its in-links
   
@@ -572,20 +574,22 @@ In early days the web links were navigational. Toay many links are transactional
 
   <img src="src/1.3.2.png" width="200">   <img src="src/1.3.3.png" width="200">
 
+    You might wonder: Let’s just use Gaussian elimination to solve this system of linear equations. Bad idea! Not scalable!
+
 - PageRank: Matrix Formulation
-  - Stochastic adjacency matrix M: distribution of out-links per page (column)
-  - Rank vector r: one entry per page
+  - Stochastic adjacency matrix M: probability distribution of out-links per page (column)
+  - Rank vector r: one entry per page representing the importance score.
   - flow equation: $r=M\cdot r$
   
   <img src="src/1.3.4.png" width="500"> 
   <img src="src/1.3.5.png" width="500">
 
-- Connection to Random Walk
+- Intuitive Connection to Random Walk
 
     Imagine a random web surfer:
     - at any time t surfer is on some page i
     - at time t+1 the surfer follows an out-link from i uniformly at random
-    - ends up on some page j linnked from i
+    - ends up on some page j linked from i
     - process repeats indefinitely
   
   Let:
@@ -593,11 +597,11 @@ In early days the web links were navigational. Toay many links are transactional
   - p(t) is a probability distribution over pages
 
    Where is the surfer at time t+1?
-   - $p(t+1) = M\cdot p(t)$
+   - Follow a link uniformly at random: $p(t+1) = M\cdot p(t)$
   
-  Suppose the random walk reaches a state $p(t+1) = M\cdot p(t) = p(t)$ then p(t) is **stationary distribution** of a ranom walk.
+  Suppose the random walk reaches a state $p(t+1) = M\cdot p(t) = p(t)$ then $p(t)$ is **stationary distribution** of a ranom walk.
 
-  Our original rank vector r satisfies $r=M\cdot r$. So r is a stationary distribution for the random walk.
+  &rarr; Our original rank vector r satisfies $r=M\cdot r$. So **r is a stationary distribution for the random walk**.
 
 - Eigenvector Formulation: to efficiently solve for r
 
@@ -607,10 +611,12 @@ In early days the web links were navigational. Toay many links are transactional
 
     <img src="src/1.3.7.png" width="500">  
 
+    Princiapl eigenvector is the eigenvector associated with eigenvalue 1.
+
 - PageRank Summary
   - Measures importance of nodes in a graph using the link structure of the web
   - Models a random web surfer using the *stochastic adjacency matrix M*
-  - PageRank solves $r=M\cdot r$ where r can be viewed as both the *principle eigenvector of M* and as *the stationary distribution of a random walk* over the graph
+  - PageRank solves **$r=M\cdot r$** where r can be viewed as both the *principle eigenvector of M* and as *the stationary distribution of a random walk* over the graph
 
 #### 1.3.2 PageRank: How to solve?
 
@@ -620,13 +626,16 @@ Given a web graph with N nodes, where the nodes are pages an edges are hyperlink
 <img src="src/1.3.9.png" width="500">
 <img src="src/1.3.10.png" width="300">
 
+
 Two Problems:
 
 - **Spider traps**: all out-links are within the group, eventually absorbing all importance.
   
     <img src="src/1.3.11.png" width="300">
 
-    Spider-traps are not a problem, but With traps PageRank scores are not what we want.
+    Imagine that a random walker will get stuck within the circle due to no way out.
+
+    Spider-traps are not a problem, but with traps PageRank scores are **not** what we want.
 
     Solution: Never get stuck in a spider trap by teleporting out of it in a finite number of steps
     
@@ -636,26 +645,33 @@ Two Problems:
       - Common values for $\beta$ are in the range 0.8 to 0.9
     - **Surfer will teleport out of spider trap within a few time steps**
   
-    <img src="src/1.3.13.png" width="300"> 
+      <img src="src/1.3.13.png" width="300"> 
   
 - **Dead ends**: Some pages have no out-links, causing importance to "leak out".
   
     <img src="src/1.3.12.png" width="300">
 
-    Dead-ends are a problem. The matrix is not column stochastic, so our initial assumptions are not met.
+    Dead-ends are a problem. The matrix is not column stochastic (column stochastic values do not sum to 1), so our initial assumptions for power iteration to converge are not met.
 
     Solution: Make matrix column stochastic by always teleporting when there is nowhere else to go.
 
     - Teleports: Follow random teleport links wih total probability 1 from dead ends
     - Adjust matrix accordingly
   
-    <img src="src/1.3.14.png" width="400">
+      <img src="src/1.3.14.png" width="400">
 
 - PageRank equation with Random Teleports (Google's solution that does it all):
 
     $r_j=$$\sum_{i}^{j}\beta r_i/d_i+(1-\beta)1/N$
 
+    At each time step, the ranom surfer has two options.
+
+    - With prob. $\beta$ follow a link at random
+    - With prob. $1-\beta$ jump to a random page
+
     This formulation assumes that M has no dead ends. We can either preprocess matrix M to remove all dead ends or explicitly follow random teleport links with probability 1.0 from dead-ends.
+
+    Note: random walk is just an intuition and we don't need to simulate the random walks. With the power method we can just get to the PageRank through  a series of matrix multiplications.
 
     <img src="src/1.3.15.png" width="400">
     <img src="src/1.3.16.png" width="400">
@@ -663,6 +679,10 @@ Two Problems:
 - Summary
   - PageRank solves for $r=Gr$ and can be efficiently computed by power iteration of the stochastic adjacency matrix G.
   - Adding random uniform teleportattion solves issues of dead-ends and spider traps.
+  - PageRank approach ensures all the nodes having non-zero importances (thanks to random teleport). 
+  - Nodes with more in-links are considered more important. Nodes with in-links from important nodes are also considered important.
+
+    <img src="src/1.3.16-1.png" width="300"> 
 
 #### 1.3.3 Random Walk with Restarts and Personalized PageRank
 
@@ -674,11 +694,13 @@ Given a bipartite graph representing user and item interactions (i.e. purchase),
 
 Intuition: if items Q and P are interacted by similar users, recommend P when user interacts with Q.
 
-- Node proximity Measurements
+- Node Proximity Measurements
 
     Which is more related A,A', B,B' or C,C'?
 
     <img src="src/1.3.18.png" width="400">   
+
+    How do we develop a measure that considers the shortest path, as well as common neighbors?
   
 - Idea: Random Walks with Restart
   - Every node has some importance. Importance gets evenly split among all edges and pushed to the neighbors
@@ -693,23 +715,23 @@ Intuition: if items Q and P are interacted by similar users, recommend P when us
   
     Because the "proximity" considers:
     - Multiple connections
-    - Multiple paths
-    - Direct and indirect connections
-    - Degree of the node
+    - Multiple paths between a pair of nodes
+    - Strengths of the connections - Direct and indirect connections
+    - Degree of the nodes on the path (more edges lead to more chance for random walker to walk away)
 
 - Summary: Page Rank Variants
 
     PageRank:
     - Ranks nodes by "importance"
-    - Teleports to any node in the network with uniform probability:
+    - Teleports to **any node** in the network with uniform probability:
   
         S=[0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
 
     - Can be efficiently computed by power iteration of adjacency matrix
   
-    Topic-Specific PageRank aka Personalzied PageRank:
+    Topic-Specific PageRank aka **Personalzied** PageRank:
     - Ranks proximity of nodes to the teleport nodes S
-    - Teleports to a specific set of nodes
+    - Teleports to a **specific set of nodes**
     - Nodes can have different probabilities of the surfer landing:
   
         S=[0.1, 0, 0, 0.2, 0, 0, 0.5, 0, 0, 0.2]
@@ -717,10 +739,11 @@ Intuition: if items Q and P are interacted by similar users, recommend P when us
   
     Random Walks with Restarts:
     - Answer "What is most related item to Item Q?"
-    - Topic-Specific PageRank where teleport is always to the same node i.e. back to the starting node {Q}:
+    - Topic-Specific PageRank where teleport is **always** to the same node i.e. back to the **starting node** {Q}:
   
         S=[0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
     
+    All can be efficiently computed through power iteration, with differences in how the teleport node matrix is defined. 
   
 #### 1.3.4 Matrix Factorization and Node Embeddings
 
@@ -730,38 +753,48 @@ Node embedding recall:
 
 - Connection to Matrix Factorization:
 
-  - Simplest node similarity: Nodes u, v are similar if they are connected by an edge.
-  - This means $z^T_vz_u=A_{u,v}$, which is the (u,v) entry of the graph adjacency matrix A.
-  - Therefore: $Z^T\cdot Z=A$
+  - Simplest **node similarity**: Nodes u, v are similar if they are connected by an edge.
+  
+    &rarr; This means $z^T_vz_u=A_{u,v}$, which is the (u,v) entry of the graph adjacency matrix A.
+
+    Therefore: $Z^T\cdot Z=A$
 
     <img src="src/1.3.21.png" width="500">  
 
 - Matrix Factorization
   - The embedding dimension d (number of rows in Z) is much smaller than number of nodes n.
   - Exact factorization $A=Z^T\cdot Z$ is generally not possible.
-  - However we can learn Z approximately.
+  - However we can learn Z approximately:
   
-  <img src="src/1.3.22.png" width="500">  
+    <img src="src/1.3.22.png" width="500">  
 
 - Random Walk-based Similarity
 
-    DeepWalk and node2vec have a more complex node similarity definition based on random walks. They can also be formulated as matrix factorization.
+    **DeepWalk** and **node2vec** have a more complex node similarity definition based on random walks. They can also be formulated as **matrix factorization**.
 
     DeepWalk is equivalent to matrix factorization of the following complex matrix expression:
 
   <img src="src/1.3.23.png" width="500"> 
+
+  We can compute DeepWalk embeddings either by simulating random walks and performing gradient descents, or by transforming the adjancency matrix with the equiation above based on length of random walk (T), node degrees (D), and negative samples.
+
+  Node2vec can also be formulated as a matrix factorization (albeit a more complex matrix)
+
+  Refer to the [paper](https://keg.cs.tsinghua.edu.cn/jietang/publications/WSDM18-Qiu-et-al-NetMF-network-embedding.pdf) for more detailed proofs.
 
 - Limitations of node embeddings via matrix factorization and random walks (i.e. DeepWalk and node2vec)
 
     1. Cannot obtain embeddings for nodes not in the training set. Need to recopmute all node embeddings.
    
         <img src="src/1.3.24.png" width="400"> 
-    2. Cannot capture structural similarity: 
+    2. Cannot capture **structural similarity**: 
    
         <img src="src/1.3.25.png" width="400"> 
 
-        Node 1 amd 11 are structurally similar - part of one triangle, degree 2. However they ahve very different embeddings.
+        Node 1 amd 11 are structurally similar - part of one triangle, degree 2. However they have very different embeddings.
         It's unlikely a random walk will reach node 11 from node 1. 
+
+        Random walk based embeddings are better at capturing close neighbors instead of local structure similarities. Anoymous walks however will be able to capture the structure similarities.
     
     3. Cannot utilize node, edge and graph features
 
