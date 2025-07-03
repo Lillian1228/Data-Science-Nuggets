@@ -206,7 +206,7 @@ def right_bound(nums, target):
 
 "Loops may achieve a performance gain for your program. Recursion may achieve a performance gain for your programmer." There's no performance benefit to using recursion. Loops are sometimes better for performance.
 
-Recursion is when a function calls itself. Every recursive function has two cases: the base case and the recursive case. The base case is when the function doesn't call itself  so it doesn't go into an infinite loop.
+Recursion is when a function calls itself. Every recursive function has **two cases: the base case and the recursive case**. The base case is when the function doesn't call itself  so it doesn't go into an infinite loop.
 
 A stack is a simple data structure with only two actions: push and pop. Push is to add a new item to the top, and pop is to remove the topmost item and read it. 
 

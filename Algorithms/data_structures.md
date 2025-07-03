@@ -660,7 +660,19 @@ def traverse(root: TreeNode):
 ```
 The traversal order of the traverse function is to keep moving to the left child node until it encounters a null pointer and can't go further, then it tries to move one step to the right child node; then it tries moving left again, repeating this cycle. If both left and right subtrees are done, it returns to the parent node.
 
-The order in which the traverse function visits nodes is fixed. However, the effect can vary depending on where you write the code within the traverse function. 
+The order in which the traverse function visits nodes is fixed. However, the effect can vary depending on where you write the code within the traverse function:
+- Pre-order code
+  - executes as soon as you enter a binary tree node.
+  - only obtain data passed from parent nodes through function or class initialized parameters
+  - Cannot obtain subtree info
+
+- In-order code
+  - executes after the left subtree of a binary tree node has been completely traversed and just before starting to traverse the right subtree.
+  - obtain parameter data as well as data passed back by the left subtree through function return values.
+  - The inorder position is mainly used in BST scenarios given inorder traversal of a BST resulting in a sorted array.
+- Post-order code
+  - executes just before you leave a binary tree node.
+  - most powerful, as it can obtain parameter data and simultaneously receive data from both left and right subtrees through function return values
 
 <img src="src/binary_tree4.png" width="300">
 
@@ -670,6 +682,14 @@ The order in which the traverse function visits nodes is fixed. However, the eff
 The Inorder Traversal of a BST is ordered. This is an importatnt property to solve some problems.
 
 ![eg](src/binary_tree6.png)
+
+In summary, the general thought process when encountering a binary tree problem is:
+
+1. Traversal: Can the answer be obtained by traversing the binary tree once? If so, use a **traverse function with external variables**.
+
+2. Decompose: Can you define a **recursive** function to derive the answer to the original problem from the answers to **subproblems (subtrees)**? If so, write this recursive function's definition and make full use of its return value.
+
+3. Regardless of the approach, understand what each node of the binary tree needs to do and when it should be done (preorder, inorder, postorder).
 
 #### 5.3.2 Level Order Traversal / Breadth-First Search (BFS) 
 
@@ -693,7 +713,8 @@ def levelOrderTraverse(root):
       q.append(cur.right)
 ```
 Pros: simplicity
-Cons: it doesn't allow tracking which levelof the current node is on, which is often required to calculate the minimum depth of a binary tree.
+
+Cons: it doesn't allow tracking which level of the current node is on, which is often required to calculate the minimum depth of a binary tree.
 
 2. Double loop method: most common way of performing level order traversal as it records the level of each node.
 
