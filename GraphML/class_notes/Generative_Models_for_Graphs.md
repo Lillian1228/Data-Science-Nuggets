@@ -39,7 +39,7 @@ Graph Generative Models Basics:
     - $p_{data}(x)$ is the data distribtion, which is never known to us, but we have sampled $x_i ~ p_{data}(x)$
     - $p_{model}(x;\theta)$ is the model, parametrized by $\theta$, that we use to approximate $p_{data}(x)$
 - Goal:
-    1. Make $p_{model}(x;\theta)$ close to $p_{data}(x)$ (Density Estimataion)
+    1. Make $p_{model}(x;\theta)$ close to $p_{data}(x)$ (Density Estimation)
         - Key Principle: Maximum Likelihood
         - Fundamental approach to modeling distributions: 
 
@@ -49,7 +49,7 @@ Graph Generative Models Basics:
 
             &rarr; That is, find the model that is most likely to have generated the observed data x
 
-    2. Make sure we can samle from $p_{model}(x;\theta)$ (Sampling)
+    2. Make sure we can sample from $p_{model}(x;\theta)$ (Sampling)
 
         The most common approach:
         
@@ -75,7 +75,7 @@ Auto-regressive models:
     - In our case $x_t$ will be the t-th action (add node, add edge)
 
 
-#### 8.1.2 Graph RNN: Genrating Realistic Graphs
+#### 8.1.2 Graph RNN: Generating Realistic Graphs
 
 Graph RNN Idea: Generating graphs via sequentially adding nodes and edges
 
@@ -120,7 +120,7 @@ Background: Recurrent NNs
     - $x_t$: Input to RNN at step t
     - $y_t$: Output of RNN at step t
 - RNN cell: $W,U,V$ Trainable parameters
-    1. Update hidden state: $s_t=\sigma(W\cdot x_t+U\cdot s_{t-1}$
+    1. Update hidden state: $s_t=\sigma(W\cdot x_t+U\cdot s_{t-1})$
     2. Output prediction: $y_t=V\cdot s_t$
 
     More expressive cells: GRU, LSTM, etc.
@@ -233,7 +233,173 @@ Putting Things Together
 
 #### 8.1.3 Scaling up & Evaluating Graph Generation
 
+Issue: Tractability
+
+- Any node can connect to any prior node
+- Too many steps for edge generation
+    - Need to generate full adjacency matrix
+    - Complex too-long edge dependencies
+
+    <img src="src/L8/8.1.23.png" width="400">   
+
+    How do we limit this complexity?
+
+Solution: Tractability via BFS
+
+- Breadth-First Search node ordering
+
+    <img src="src/L8/8.1.24.png" width="400"> 
+
+    - Since Node 4 doesn’t connect to Node 1
+    - We know all Node 1’s neighbors have already been traversed
+    - Therefore, Node 5 and the following nodes will never connect to node 1
+    - We only need memory of 2 “steps” rather than n − 1 steps
+
+- Benefits:
+    - Reduce possible node orderings: From O(n!) to number of distinct BFS orderings
+    - Reduce steps for edge generation: Reducing number of previous nodes to look at
+
+    <img src="src/L8/8.1.25.png" width="500">  
+
+Evaluating Generated Graphs
+
+- Task: Compare two sets of graphs and define similarity metrics for graphs
+- Solution
+    1. Visual similarity
+
+    <img src="src/L8/8.1.26.png" width="400">  
+    <img src="src/L8/8.1.27.png" width="400">  
+
+    Issue: Direct comparison between two graphs is hard (isomorphism test is NP)!
+    
+    Solution: Compare graph statistics!
+
+    2. Graph statistics similarity
 
 
+    
+        Typical Graph Statistics:
+        - Degree distribution (Deg.)
+        - Clustering coefficient distribution (Clus.)
+        - Orbit count statistics (Orbit)
+
+        Note: Each statistic is a probability distribution
+
+        Step 1: How to compare **two graph statistics**
+        - **Earth Mover Distance (EMD)**: Compare **similarity between 2 distributions**
+        - Intuition: Measure the minimum effort that move earth from one pile to the other
+        
+            <img src="src/L8/8.1.28.png" width="400">  
+
+        Step 2: How to comapre **sets oF graph statistics**
+        - **Maximum Mean Discrepancy (MMD)** based on EMD
+        - Compare **similarity between 2 sets**, based on the similarity between set elements
+
+             <img src="src/L8/8.1.29.png" width="500">
+
+    Example:
+
+     <img src="src/L8/8.1.30.png" width="500"> 
 
 #### 8.1.4 Applicaitons of Deep Graph Generative Models
+
+Application: Drug Discovery
+
+- Question: Can we learn a model that can generate valid and realistic molecules with optimized property scores?
+- [Graph Convolutional Policy Network for Goal-Directed Molecular Graph Generation](https://cs.stanford.edu/people/jure/pubs/gcpn-neurips18.pdf). J. You, B. Liu, R. Ying, V. Pande, J. Leskovec. Neural Information Processing Systems (NeurIPS), 2018
+
+     <img src="src/L8/8.1.31.png" width="500"> 
+
+Goal-Directed Graph Generation
+- Generating graphs that:
+    - Optimize a given objective (High scores)
+        - e.g., drug-likeness
+    - Obey underlying rules (Valid)
+        - e.g., chemical validity rules
+    - Are learned from examples (Realistic)
+        - Imitating a molecule graph dataset
+        - We have just covered this part
+- Challenge: objectives like drug-likeness are governed by physical law, which are assumed to be unknown to us.
+- Idea: Reinforcement Learning (RL)
+
+    A ML agent **observes** the environment, takes an **action** to interact with the environment, and receives positive or negative **reward**
+    
+    The agent then **learns from this loop**
+
+    Key idea: Agent can directly learn from environment, which is a **blackbox** to the agent
+
+- Solution: Graph Convolutional Policy Network (GCPN)
+
+    Key component of GCPN:
+    - Graph Neural Network captures graph structural information
+    - Reinforcement learning guides the generation towards the desired objectives
+    - Supervised training imitates examples in given datasets
+
+- GCPN vs GraphRNN
+    - Commonality:
+        - Generate graphs sequentially
+        - Imitate a given graph dataset
+    - Main Differences:
+        - GCPN uses **GNN** to predict the generation action
+            - Pros: GNN is more expressive than RNN
+            - Cons: GNN takes longer time to compute than RNN
+        - GCPN further uses RL to direct graph generation to our goals
+            - RL enables goal-directed graph generation
+    
+    - Sequential graph generation
+        - GraphRNN: predict action based on **RNN hidden states**
+
+        <img src="src/L8/8.1.32.png" width="500"> 
+
+        - GCPN: predict action based on **GNN node embeddings**
+
+        <img src="src/L8/8.1.33.png" width="500"> 
+
+- Overview of GCPN
+
+    <img src="src/L8/8.1.34.png" width="600">  
+
+    (a) Insert nodes
+
+    (b,c) Use GNN to predict which nodes to connect
+    
+    (d) Take action (check chemical validity)
+    
+    (e, f) Compute reward
+
+    - How do we set rewards?
+        - Step reward: Learn to take valid action
+            - At each step, assign small positive reward for valid action
+        - Final reward: Optimize desired properties
+            - At the end, assign positive reward for high desired property
+        - Reward = Final reward + Step reward
+    
+    - How do we train?
+
+    1. Supervised training: Train policy by **imitating the action** given by real observed graphs. Use
+gradient.
+        - We have covered this idea in GraphRNN
+    2. RL training: Train policy to optimize rewards. Use standard **policy gradient** algorithm
+        - Refer to any RL course, e.g., CS234
+
+        <img src="src/L8/8.1.35.png" width="500">   
+
+- Qualitative Results
+
+    Property optimization: Generate molecules with high specified property score
+
+    <img src="src/L8/8.1.36.png" width="400">   
+
+    Constrained optimization: Edit a given molecule for a few steps to achieve higher property score
+
+    <img src="src/L8/8.1.37.png" width="400"> 
+
+#### Summary of Graph Generation
+
+- Complex graphs can be successfully generated via sequential generation using deep learning
+- Each step a decision is made based on hidden state, which can be
+    - Implicit: vector representation, decode with RNN
+    - Explicit: intermediate generated graphs, decode with GCN
+- Possible tasks:
+    - Imitating a set of given graphs
+    - Optimizing graphs towards given goals 
