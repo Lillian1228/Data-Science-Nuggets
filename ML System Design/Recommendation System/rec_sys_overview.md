@@ -253,3 +253,128 @@ Collaborative filtering Pros & Cons:
 #### Recommendation using Deep Neural Network Models
 -----
 
+Deep neural network (DNN) models can address some limitations of matrix factorization, like the difficulty of using side features, and capturing specific user interests. DNNs can easily incorporate query features and item features (due to the flexibility of the input layer of the network), which can help capture the specific interests of a user and improve the relevance of recommendations.
+
+- Softmax DNN for Recommendation:
+
+  One possible DNN model is **softmax**, which treats the problem as a multiclass prediction problem in which:
+  - The input is the user query.
+  - The output is a probability vector with size equal to the number of items in the corpus, representing the **probability to interact with each item**; for example, the probability to click on or watch a YouTube video.
+
+- DNN Model Input can include:
+
+  - Dense features (for example, watch time and time since last watch)
+  - Sparse features (for example, watch history and country)
+
+  Unlike the matrix factorization approach, you can add side features such as age or country. We'll denote the input vector by x.
+
+- Model Architecture
+
+  - Determines the complexity and expressivity of the model
+  - By adding hidden layers and non-linear activation functions (i.e. ReLU), the model can capture more complex relatinoships in the data.
+  - But increasing the number of parameters also typically makes the model harder to train and serve.
+
+- Softmax Output: Predicted Probability Distribution
+
+  <img src="src/dnn_1.png" width="700"/> 
+
+  The softmax layer maps a vector of scores $y \in \reals^n$ (sometimes called the logits) to a probability distribution.
+
+  <img src="src/dnn_2.png" width="400"/>  
+
+  Note: The name softmax is a play on words. A "hard" max assigns probability 1 to the item with the largest score. By contrast, the softmax assigns a non-zero probability to all items, giving a higher probability to items that have higher scores.
+
+- Loss Function 
+  
+  Defined to compared the following:
+  - $\hat p$: the output of the softmax layer (a probability distribution)
+  - $p$: the ground truth, representing the items the user has interacted with (for example, YouTube videos the user clicked or watched). This can be represented as a **normalized multi-hot distribution** (a probability vector).
+  
+  For example, **cross-entropy loss** can be used to compare two probability distributions.
+
+- Softmax Embeddings
+  
+  <img src="src/dnn_3.png" width="700"/>  
+
+  Note: Since log is an increasing function, items j with the highest probability $\hat p_j$ are the items with the highest dot product $\psi(x)\cdot V_j$. Therefore, the dot product can be interpreted as a similarity measure in this embedding space.
+
+  <img src="src/dnn_4.png" width="400"/>  
+
+- Embeddings in DNN and Matrix Factorization
+
+  - Query Embeddings: 
+    - MF learns one embedding $U_i$ per query i
+    - DNN learns a mapping from the query feature x to an embedding $\psi(x) \in \reals^d$.
+    - You can think of this DNN model as a generalization of matrix factorization, in which you replace the query side by a nonlinear function $\psi(\cdot)$.
+
+  - Item Embeddings:
+    - In both the softmax model and the matrix factorization model, the system learns **one embedding vector $V_j$ per item j**. What we called the item embedding matrix $V \in \reals^{n\times d}$ in matrix factorization is now the **matrix of weights of the softmax layer**.
+
+- Can you use item features? 
+
+  Can you apply the same idea to the item side? That is, instead of learning one embedding per item, can the model learn a nonlinear function that maps item features to an embedding?
+  
+  &rarr; Yes. To do so, use a **two-tower neural network**, which consists of two neural networks:
+  - One NN maps query features $x_{query}$ to query embedding $\psi(x_{query}) \in \reals^d$
+  - One NN maps query features $x_{item}$ to item embedding $\phi(x_{item}) \in \reals^d$
+  
+  The output of the model can be defined as the dot product of $\psi(x_{query}) \cdot \phi(x_{item})$. Note that this is not a softmax model anymore. The new model predicts one value per pair ($x_{query}$, $x_{item}$) instead of a probability vector for each query $x_{query}$.
+
+- Softmax Model Training
+
+  The softmax training data consists of the query features $x$ and a vector of items the user interacted with (represented as a probability distribution $p$). These are marked in blue in the following figure. 
+  
+  The variables of the model are the weights in the different layers. These are marked as orange in the following figure. 
+  
+  The model is typically trained using any variant of stochastic gradient descent.
+
+  <img src="src/dnn_5.png" width="400"/> 
+
+  - Computational Issue and Folding
+
+    Since the loss function compares two probability vectors $p, \hat p(x) \in \reals^n$ (the ground truth and the output of the model, respectively), computing the gradient of the loss (for a single query $x$) can be prohibitively **expensive if the corpus size $n$ is too big**.
+
+    Naive idea: compute gradients only on the positive items (items that are active in the ground truth vector)
+
+    &rarr; However, **if the system only trains on positive pairs, the model may suffer from folding**, as explained below.
+
+    In the following figure, assume that each color represents a different category of queries and items. Each query (represented as a square) only mostly interacts with the items (represented as a circle) of the same color. For example, consider each category to be a different language in YouTube. A typical user will mostly interact with videos of one given language.
+
+    <img src="src/dnn_6.png" width="200"/> 
+
+    The model may learn how to place the query/item embeddings of a given color relative to each other (**correctly capturing similarity within that color**), **but embeddings from different colors may end up in the same region** of the embedding space, by chance. 
+
+    &rarr; known as **folding**, can lead to spurious recommendations: at query time, the model may **incorrectly predict a high score for an item from a different group**.
+
+  - Solution: **Negative Sampling**
+
+    Negative examples are items labeled "irrelevant" to a given query. Showing the model negative examples during training teaches the model that embeddings of different groups should be pushed away from each other.
+
+    Instead of using all items to compute the gradient (which can be too expensive) or using only positive items (which makes the model prone to folding), you can use negative sampling. 
+    
+    More precisely, you compute an approximate gradient, using the following items:
+    - All positive items (the ones that appear in the target label)
+    - A sample of negative items ($j$ in 1,...,$n$)
+  
+    There are different strategies for sampling negatives:
+    - You can sample **uniformly**.
+    - You can give higher probability to items j with higher score $\psi(x)\cdot V_j$. Intuitively, these are examples that contribute the most to the gradient; these examples are often called **hard negatives**.
+  - Further Readings
+    - [Deep Neural Networks for YouTube Recommendations](https://research.google/pubs/deep-neural-networks-for-youtube-recommendations/)
+    - [Folding: Why Good Models Sometimes Make Spurious Recommendations](https://dl.acm.org/doi/10.1145/3109859.3109911)
+  
+- Training Comparison: MF versus Softmax
+
+| | Matrix Factorization | Softmax DNN |
+|----|---|---|
+|Query Features| Mot easy to include | Can be included|
+|Cold start | Does not easily handle out-of vocab queries or items. Some heuristics can be used (for example, for a new query, average embeddings of similar queries). | Easily handles new queries.|
+|Folding | Folding can be **easily reduced by adjusting the unobserved weight in WALS.** | **Prone to folding. Need to use techniques such as negative sampling or gravity.**|
+|Training scalability | **Easily scalable to very large corpora** (perhaps hundreds of millions items or more), but only if the input matrix is sparse. | **Harder to scale to very large corpora**. Some techniques can be used, such as hashing, negative sampling, etc.|
+|Serving scalability | Embeddings U, V are static, and a set of candidates can be pre-computed and stored. | Item embeddings V are static and can be stored. The query embedding usually needs to be computed at query time, making the model more expensive to serve.|
+
+  In summary:
+  - **Matrix factorization is usually the better choice for large corpora**. It is easier to scale, cheaper to query, and less prone to folding.
+  - **DNN models can better capture personalized preferences, but are harder to train and more expensive to query**. DNN models are preferable to matrix factorization for scoring because DNN models can use more features to better capture relevance. Also, it is **usually acceptable for DNN models to fold**, since you mostly care about **ranking a pre-filtered set of candidates assumed to be relevant**.
+
+### Second Stage: Retrieval
