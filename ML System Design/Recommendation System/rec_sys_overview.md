@@ -377,4 +377,127 @@ Deep neural network (DNN) models can address some limitations of matrix factoriz
   - **Matrix factorization is usually the better choice for large corpora**. It is easier to scale, cheaper to query, and less prone to folding.
   - **DNN models can better capture personalized preferences, but are harder to train and more expensive to query**. DNN models are preferable to matrix factorization for scoring because DNN models can use more features to better capture relevance. Also, it is **usually acceptable for DNN models to fold**, since you mostly care about **ranking a pre-filtered set of candidates assumed to be relevant**.
 
-### Second Stage: Retrieval
+#### Retrieval: Suppose you have an embedding model. Given a query, how would you decide which items to recommend?
+
+- At serve time, given a query, you start by doing one of the following:
+
+  - For a matrix factorization model, the query (or user) embedding is known statically, and the system can simply look it up from the user embedding matrix.
+  - For a DNN model, the system computes the query embedding $\psi(x)$ at serve time by running the network on the feature vector $x$.
+
+- Once you have the query embedding $q$. search for item embeddings $V_j$ that are close to $q$ in the embedding space. This is a nearest neighbor problem. For example, you can return the top k items according to the similarity score $s(q, V_j)$.
+
+#### Large-scale retrieval
+
+To compute the nearest neighbors in the embedding space, the system can exhaustively score every potential candidate. Exhaustive scoring can be expensive for very large corpora, but you can use either of the following **strategies to make it more efficient**:
+
+- If the query embedding is known statically, the system can perform exhaustive **scoring offline**, precomputing and storing a list of the top candidates for each query. This is a **common practice for related-item recommendation**.
+- Use **approximate nearest neighbors**. Google provides an open-source tool on GitHub called **ScaNN** (Scalable Nearest Neighbors). This tool performs efficient vector similarity search at scale.
+
+### Second Stage: Scoring
+
+#### Overview
+
+After candidate generation, **another model scores and ranks the generated candidates** to select the set of items to display. The recommendation system may have **multiple candidate generators** that use different sources, such as the following:
+- Related items from a matrix factorization model.
+- User features that account for personalization.
+- "Local" vs "distant" items; that is, taking geographic information into account.
+- Popular or trending items.
+- A social graph; that is, items liked or recommended by friends.
+
+The system combines these different sources into a common pool of candidates that are then scored by a single model and ranked according to that score. For example, the system can train a model to **predict the probability of a user watching a video on YouTube** given the following:
+- query features (for example, user watch history, language, country, time)
+- video features (for example, title, tags, video embedding)
+  
+The system can then rank the videos in the pool of candidates according to the prediction of the model.
+
+#### Why not let the candidate generator score?
+
+Since candidate generators compute a score (such as the similarity measure in the embedding space), you might be tempted to use them to do ranking as well. However, you should avoid this practice for the following reasons:
+- Some systems rely on multiple candidate generators. The scores of these different generators might not be comparable.
+- With a smaller pool of candidates, the system can afford to **use more features and a more complex model that may better capture context**.
+
+#### Choosing an objective function for scoring
+
+The choice of scoring function can dramatically affect the ranking of items, and ultimately the quality of the recommendations. For example:
+- **Maimize Click Rate**
+  
+  If the scoring function optimizes for clicks, the systems may recommend **click-bait** videos. This scoring function generates clicks but does not make a good user experience. **Users' interest may quickly fade**.
+
+- **Maximize Watch Time**
+
+  If the scoring function optimizes for watch time, the system might recommend **very long videos**, which might lead to a **poor user experience**. Note that multiple short watches can be just as good as one long watch.
+- **Increase Diversity and Maximize Session Watch Time**
+
+  Recommend **shorter videos**, but ones that are more likely to keep the user engaged.
+
+#### Positional bias in scoring
+
+In reality, items that appear lower on the screen are less likely to be clicked than items appearing higher on the screen. Users' click probability depends on both the item's relevance and its position. 
+
+However, when scoring videos, the **system usually doesn't know where on the screen a link to that video will ultimately appear**. There's a disconnect between model training/evaluation and real-world presentation. 
+
+A naive fix would be to simulate how an item would perform at different positions. i.e. We could ask "What's the predicted CTR for the item at position 1, 2, 3" to better understand its true appeal independent of position bias. But there are two issues:
+- Computing scores multiple times per item for all possible positions may be **computationally expensive**. 
+- Even if querying multiple positions were feasible, items may have **inconsistent ranking depending on position** across multiple ranking scores. i.e. item A is ranked above B at position 1, but below B in position 2&3.
+
+&rarr; So even with perfect position-aware scores, it becomes non-trivial to decide on a globally optimal ranking, breaking the simplicity of sorting items by score. 
+
+Solutions:
+- Training-time Debiasing
+  
+  Create position-independent rankings, that is, train the model to predict **relevance or utility of an item reardless of position**.
+
+  Potential debiasing techniques: 
+  - Inverse propensity weighting (IPW) to account for exposure bias in training data
+  - Position-based models (PBM) to separate position effects
+
+- Serving-time Standardization
+
+  Rank all the candidates as if they are in the top position on the screen. i.e. If the model includes position as a feature, we fix the input at inference time to provide a fair comparision with a consistent scoring basis for all items. 
+
+### Third Stage: Re-ranking
+
+In the final stage of a recommendation system, the system can re-rank the candidates to consider **additional criteria or constraints (i.e. freshness, diversity, and fairness)**. One re-ranking approach is to use **filters that remove some candidates**.
+
+Example: 
+- Re-ranking on a video recommender by doing the following:
+  - Training a separate model that detects whether a video is click-bait.
+  - Running this model on the candidate list.
+  - Removing the videos that the model classifies as click-bait.
+
+- Re-ranking videos by modifying the score as a function of:
+  - video age (perhaps to promote fresher content)
+  - video length
+
+#### Freshness
+
+Most recommendation systems aim to incorporate the latest usage information, such as current user history and the newest items. Keeping the model fresh helps the model make good recommendations.
+
+Solutions:
+- **Re-run training** as often as possible to learn on the latest training data. 
+  
+  We recommend **warm-starting** the training so that the model does not have to re-learn from scratch. Warm-starting can **significantly reduce training time**. For example, in matrix factorization, warm-start the embeddings for items that were present in the previous instance of the model.
+
+- Create an **"average" user to represent new users in matrix factorization models**. You don't need the same embedding for each user—you can create **clusters of users based on user features**.
+- Use a DNN such as a **softmax model or two-tower model**. Since the model takes feature vectors as input, it can be run on a query or item that was not seen during training.
+
+- Add **document age** as a feature. For example, YouTube can add a **video's age or the time of its last viewing** as a feature.
+
+#### Diversity
+
+If the system always recommend items that are "closest" to the query embedding, the candidates tend to be very similar to each other. This lack of diversity can cause a bad or boring user experience. For example, if YouTube just recommends videos very similar to the video the user is currently watching, such as nothing but owl videos (as shown in the illustration), the user will likely lose interest quickly.
+
+Solutions:
+- Train **multiple candidate generators** using different sources.
+- Train **multiple rankers (scoring models)** using different objective functions.
+- **Re-rank** items based on genre or other metadata to ensure diversity.
+
+#### Fairness
+
+Your model should treat all users fairly. Therefore, make sure your model isn't learning unconscious biases from the training data.
+
+Solutions:
+- Include diverse perspectives in design and development.
+- Train ML models on comprehensive data sets. Add auxiliary data when your data is too sparse (for example, when certain categories are under-represented).
+- Track metrics (for example, accuracy and absolute error) on each demographic to watch for biases.
+- Make separate models for underserved groups.
