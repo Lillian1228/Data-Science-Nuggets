@@ -23,3 +23,7 @@
 - using the built-in memo decorator for DP problem:
   - from functools import cache, lru_cache
   - @cache or @lru_cache(None)
+
+- Double-ended queue (essentially doubly linked list) in Python: ```from collections import deque``` 
+  - Compared to a standard queue (FIFO - First In First Out queue), it offers additional operations: insertion and removal of elements at both the head and the tail: ```popleft()```, ```appendleft()```
+  - Used to implement: level order traversal, stack, etc.

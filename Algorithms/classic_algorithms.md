@@ -98,7 +98,7 @@ Whenever you have a sorted array, you should think of the two-pointer technique.
 
 - Common techniques using Left amd Right Pointers 
   1. Binary search: finding a target in an array; finding the left/right bound of the target.
-  2. Sum of n numbers
+  2. Sum of n numbers: sort the array, use left/right pointers to get the sum, recursion on n-1 sum.
   3. Reverse array
   4. Palindrome check: A palindrome is a string that reads the same forwards and backwards. It's closely related to the concept of left-right pointers. In the palindromic substring problem, the pointers can expand outwards from the center. 
 
@@ -420,15 +420,15 @@ def maxSubarraySum(nums):
 [Maximum Subarray (53)](https://leetcode.com/problems/maximum-sum-circular-subarray/description/)
 
 
-### Divide and Conquer (D&C)
+### 6. Divide and Conquer (D&C)
 
 D&C works by breaking down a problem into smaller and saller pieces. There are two steps: 1) Figure out the base case. 2) Divide or decrease your problem until it becomes the base case. If you are using D&C on a list, the base case is probably an empty array or an array with one element.
 
-#### 4.1 Quicksort: an efficient sorting algorithm based on D&C
+#### 6.1 Quicksort: an efficient sorting algorithm based on D&C
 
 
 
-#### 4.2 Why O($n*log(n)$) for average case?
+#### 6.2 Why O($n*log(n)$) for average case?
 
 1. Each level of recursion requries scanning through all elements to place them in the correct subarray. Therefore partitioning step requires linear time O(n).
 2. each function call split the array approximately in half, creating a tree structure of recursive calls with about log(n) levels. In other words, **the recursion depth (the height of the call stack) is O($log(n)$)**.
@@ -442,9 +442,10 @@ D&C works by breaking down a problem into smaller and saller pieces. There are t
 
 Space complexity is measured by the height of the call stack.
 
-#### 4.3 Revisiting Big 0 notation
+#### 6.3 Revisiting Big 0 notation
 
 In practical applications constants in Big O could matter sometimes, i.e. when input sizes are relatively small or when algorithms in comparison have similar complexity. For instance, both merge sort and quicksort have O(n*log n) time complexity, but quicksort often outperforms due to a smaller constant factor (no need for extra memory allocation in place).
+
 
 
 
