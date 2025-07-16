@@ -1283,7 +1283,7 @@ If the problem states that the graph has no cycles, then graph traversal is exac
 
 #### 6.2.1 Depth First Search
 
-1. Traversing all the nodes with 'visited' dictionary:
+1. Traversing all the nodes with `visited` dictionary:
 ```Python
 # 加权有向图的通用实现（邻接表）
 class WeightedDigraph:
@@ -1344,43 +1344,54 @@ def traverse(graph, s, visited):
   # post-order position
 ```
 
-2. Traversing all the paths with 'onPath' array
+2. Traversing all the paths with `onPath` array
 
 For tree structures, traversing all *paths* and traversing all *nodes* is essentially the same. However, for graph structures, there is a slight difference between traversing all *paths* and traversing all *nodes*.
 
 In a tree structure, since parent nodes only point to child nodes, the path from the root node `root` to any target node `targetNode` is unique. In other words, after traversing all the nodes of a tree once, you will inevitably find the unique path from `root` to `targetNode`. 
 
 For graph structures, however, the path from a starting point `src` to a target node `dest` may not be unique. We need an `onPath` array to mark a node as being visited when entering it (in the *preorder position*) and remove the mark when exiting it (in the *postorder position*). This ensures that all paths in the graph are traversed, allowing us to find all paths from `src` to `dest`.
-  - Why do we need to remove the markin onPath?
-  Ans: For graph strucutres, we sometimes need to visit the same node multiple times in order to find all the paths.
+  - Why do we need to remove the marked onPath?
+  
+    Ans: For graph strucutres, we sometimes need to visit the same node multiple times in order to find all the paths.  
  
 ```python
 
 onpath = [False] * len(graph)
 path = []
 
+### Find all the paths from src to dest
 def traverse(graph, src, dest):
   # base case
   if src <0 or src >= len(graph):
     return
  
   if onpath[src]:
+    # prevent cycle on a path
     return
   # pre-order position
   onpath[src] = True
   path.append(src)
   if src == dest:
+    # found target node
     print(f"find path: {path}")
   for edge in graph.neighbors(src):
     traverse(graph, edge.to, dest)
   # post-order position
+  # when exiting the node, remove the path markers to restart
   path.pop()
   onpath[src] = False
 ```
 
 The algorithm for traversing all paths has a relatively high time complexity. In most cases, we might not need to exhaustively enumerate all paths but only need to find one path that meets certain conditions. In such scenarios, we can use a `visited` array to prune the search, excluding some paths that do not meet the conditions in advance and thereby reducing the complexity.
 
-For example, in *topological sorting*, we will discuss how to determine whether a graph contains a cycle. This process uses both the `visited` and `onPath` arrays for pruning. While traversing all paths, if a node `s` is marked as `visited`, it means that all paths starting from node `s` have already been traversed previously. If no cycle was found during the previous traversal, traversing it again now will certainly not find a cycle either. Therefore, we can prune directly here and skip further traversal of node `s`.
+- When to use both the `visited` and `onPath` arrays
+  
+  For example, in **topological sorting**, we will discuss how to determine **whether a graph contains a cycle**. This process uses both the `visited` and `onPath` arrays for pruning. While traversing all paths, if a node `s` is marked as `visited`, it means that all paths starting from node `s` have already been traversed previously. If no cycle was found during the previous traversal, traversing it again now will certainly not find a cycle either. Therefore, we can prune directly here and skip further traversal of node `s`.
+
+- When NOT to use both `visited` and `onPath` arrays
+
+  `visited` and `onPath` arrays are useful to prune the traversal and prevent from stucking into cycles. If the input graph explicitly states no cycles, then don't.
 
 Comapred to BFS, DFS is more efficient for problems where exploring all possible solutions, pathfinding that does not require the shortest path, and depth-first exploration (e.g., finding the deepest nodes, cycle detection, or backtracking problems) is needed.
 
@@ -1393,20 +1404,23 @@ Comapred to BFS, DFS is more efficient for problems where exploring all possible
 
 - How it works: 
   
-      The search radiates out from the starting point. First-degree connections are added to the search list **before** second-degree connections. The search list is essentially a data structure called **queue**. The search stops when a target is found or the search queue becomes empty.
+    The search radiates out from the starting point. First-degree connections are added to the search list **before** second-degree connections. The search list is essentially a data structure called **queue**. The search stops when a target is found or the search queue becomes empty.
+
+    Note that BFS is mostly suited to calculate the shortest path, because when the search radiates level by level the first time we meet the target node will be the shortest. Essentially, **BFS is better suited to traverse nodes (instead of edges)**.
+
 - Keeping only unique elements in a search queue
   
-      When nodes can appear in multiple connections (i.e. two persons are friends of each other or mutual friends exist in a network), mark the nodes that have been searched to prevent from doing unnecessary (sometimes infinite) searches.
+    When nodes can appear in multiple connections (i.e. two persons are friends of each other or mutual friends exist in a network), mark the nodes that have been searched to prevent from doing unnecessary (sometimes infinite) searches.
 
 - Queue Overview
 
-      Queues are similar to stacks in the sense that there are only two operations: enqueue (adding) and dequeue (polling).
+    Queues are similar to stacks in the sense that there are only two operations: enqueue (adding) and dequeue (polling).
 
-      Queue is a FIFO data structure: First In, First Out. Stack is a LIFO data structure: Last In, First Out.
+    Queue is a FIFO data structure: First In, First Out. Stack is a LIFO data structure: Last In, First Out.
 
     <img src="src/queue1.png" alt="eg" width="500"/>
 
-BFS of a graph structure is essentially a level-order traversal of a multi-way tree, with the addition of a `visited` array to avoid revisiting nodes.
+BFS of a graph structure is essentially a level-order traversal of a multi-way tree, with the addition of a `visited` array to avoid revisiting nodes. 
 
 ```Python
 from collections import deque
@@ -1424,7 +1438,7 @@ def bfs(graph, s):
         q.append(e.to)
         visited[e.to] = True
 
-### Method 2 that records the steps
+### Method 2 that records the depth (steps)
 def bfs(graph, s):
   visited = [False] * len(graph) 
   q = deque()
@@ -1443,26 +1457,28 @@ def bfs(graph, s):
           visited[e.to] = True
     step += 1
 
-### Method 3 that records the sum of path weights from s
+### Method 3 that records the node specific states for each node
 class State:
   def __init__(self,node, weight):
     self.node = node
-    self.weight = weight
+    self.step = step # steps from src to current node
 
 def bfs(graph,s):
   visited = [False] * len(graph) 
   q = deque()
+
   q.append(State(s,0))
   visited[s] = True
+
   while q:
     state = q.popleft()
     cur = state.node
-    weight = state.weight
+    step = state.step
     # visit the cur node and know the level it is on
-    print(f"visit {cur} with path weight {weight}")
+    print(f"visit {cur} with step {step}")
     for edge in graph.neighbors(cur):
       if not visited[edge.to]:
-        q.append(State(edge.to, weight+edge.weight))
+        q.append(State(edge.to, step+1))
         visited[edge.to] = True
 ```
 

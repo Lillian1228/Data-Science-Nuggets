@@ -446,17 +446,94 @@ Space complexity is measured by the height of the call stack.
 
 In practical applications constants in Big O could matter sometimes, i.e. when input sizes are relatively small or when algorithms in comparison have similar complexity. For instance, both merge sort and quicksort have O(n*log n) time complexity, but quicksort often outperforms due to a smaller constant factor (no need for extra memory allocation in place).
 
+### 7. Graph Algorithms
+
+#### 7.1 Union-Find
+
+Union-Find algorithm is designed to solve "dynamic connectivity" problems. Simply put, dynamic connectivity means connecting nodes in a graph. It has three properties:
+- Reflexivity: Node p is connected to itself.
+- Symmetry: If node p is connected to q, then q is also connected to p.
+- Transitivity: If node p is connected to q, and q is connected to r, then p is connected to r.
+
+1. Naive Version of Union-Find with time complexity O(N):
+
+```Python
+class UF:
+  # initialized such as all the nodes are disconnected
+  def __init__(self, n: int):
+      # 一开始互不连通
+      self._count = n
+      # 父节点指针初始指向自己
+      self.parent = [i for i in range(n)]
+
+  # Find the parent or root node of a node x
+  def find(self, x):
+      # 根节点的 parent[x] == x
+      while self.parent[x] != x:
+          x = self.parent[x]
+      return x
+
+  # connect two nodes
+  def union(self, p, q):
+      rootP = self.find(p)
+      rootQ = self.find(q)
+      if rootP == rootQ:
+          return
+      # 将两棵树合并为一棵
+      self.parent[rootP] = rootQ
+      # parent[rootQ] = rootP 也一样
+
+      # 两个分量合二为一
+      self._count -= 1
+
+  # if two nodes share the same root node they are connected 
+  def connected(self, p: int, q: int) -> bool:
+      root_p = self.find(p)
+      root_q = self.find(q)
+      return root_p == root_q
+
+```
+The time complexity of Union-Find depends on the `find()` implementation, as `connected()` and `union()` both call it. The time complexity of `find()` essentially depends on the depth and the balance of the tree structure after union.
+
+<img src="src/unionfind1.png" alt="eg" width="500"/> 
+
+One option is to optimize the tree structure by tracking the depth of each subtree, so that it is balanced with a depth of around $log(N)$. 
+
+Another more extreme option is called path compression.
+
+- Path compression
+
+  For dynamic connectivity problems, we often don't really care about the tree structures, but **only care about the root node**. This allows us to compress the tree depth to a constant of 1, letting the tree root to be the parent node of all the nodes. In this case, `find()` just takes O(1).
+
+  <img src="src/unionfind2.png" alt="eg" width="400"/>  
+
+Optimized Union-Find algorithm with path compression:
+
+```Python
+class UF:
+    # omit the same part .....
+
+    # version 1: path compression to O(1) 
+    def find(self, x: int) -> int:
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])
+        return self.parent[x]
+
+    # version 2: path compression to a tree of depth 2 
+    def find(self, x: int) -> int:
+        while self.parent[x] != x:
+          # move child node up by two levels
+            self.parent[x] = self.parent[self.parent[x]]
+        return self.parent[x]
+
+```
 
 
-
-### Union-Find
-
-
-### 7. Weighted Graph and Dijkstra's algorithm
+#### 7.2 Weighted Graph and Dijkstra's algorithm
 
 Breadth-first search is used to calculate the shortest path for an unweighted graph. Dijkstra's algorithm is used to calculate the **shortest path for a weighted graph**.
 
-#### 7.1 What is Dijkstra's algorithm?
+#### What is Dijkstra's algorithm?
 
 Dijkstra's algorithm solves the shortest-path problem for any weighted, directed graph with non-negative weights.
 
@@ -473,7 +550,7 @@ Dijkstra's algorithm solves the shortest-path problem for any weighted, directed
 
 - depending on how it is implemented and what data structures are used, the time complexity is typically O(E*log(V)) which is competitive against other shortest path algorithms.
 
-#### 7.2 Implementation
+#### Implementation
 
 
 
