@@ -28,6 +28,7 @@
 - using the built-in memo decorator for DP problem:
   - from functools import cache, lru_cache
   - @cache or @lru_cache(None)
+- Convert a single-character string to the index position in the Unicode character set: ```ord('a')``` &rarr; 97; Inversely, convert a Unicode index to the corresponding character: ```chr(65)``` &rarr; 'A'
 
 ### Data Strucures
 

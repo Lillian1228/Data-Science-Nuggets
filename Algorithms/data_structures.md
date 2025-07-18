@@ -774,7 +774,7 @@ def levelOrderTraverse(root):
 
 With this approach, each node has its own depth variable, which is the most flexible and can meet all BFS algorithm needs. However, defining an additional State class can be cumbersome, so it's usually sufficient to use the second approach unless necessary.
 
-### 5.3.3 DFS versus BFS
+#### 5.3.3 DFS versus BFS
 
 1. BFS is often used to find the shortest path:
 
@@ -974,9 +974,11 @@ In this situation, the depth of the tree equals the number of nodes `O(N)`. Alth
 
 In summary, the performance of a binary search tree depends on its depth, and the depth depends on the balance of the tree. Therefore, in practical applications, `TreeMap` needs to automatically maintain the balance of the tree to avoid performance degradation.
 
-#### 5.6 Binary Heap and Priority Queue
+### 6. More Binary Tree Variation
 
-#### 5.6.1 What is a Heap
+#### 6.1 Binary Heap and Priority Queue
+
+#### 6.1.1 What is a Heap
 
 a Heap is a special type of binary tree that meets the following criteria:
     1) Is a complete binary tree;
@@ -1002,7 +1004,7 @@ Deletion/Pop means removing the “top” element from the Heap. After deleting 
     3) exchange/"sink" the top element with the smallest/largest child node until it suffice the node value requirement.
   ![eg](src/heap3.png)
 
-#### 5.6.2 Heap Implementation with arrays
+#### 6.1.2 Heap Implementation with arrays
 - Why arrays instead of linked lists?
   - Linked lists require storing node pointers which takes larger memory footprint.
   - Push/pop can be achieved in O(1) time using arrays, compared to traversing the linked list in O(N).
@@ -1163,7 +1165,7 @@ heapq.heappop(maxHeap)
 len(minHeap)
 len(maxHeap)
 ```
-#### 5.6.3 Applications of Heap
+#### 6.1.3 Applications of Heap
 
 A heap is a data structure that supports dynamic sorting. Dynamic sorting means we can continuously add or remove elements from the data structure, and it will automatically adjust the positions of the elements so that we can retrieve them in order. This is something that regular sorting algorithms cannot achieve.
 
@@ -1196,10 +1198,190 @@ There are multiple ways to implement a Priority Queue, such as array and linked 
 
 3. The K-th Element: use the heap data structure to obtain the K-th largest/smallest element.
 
+#### 6.2 Trie or Prefix Tree
 
-### 6. Graph Structure and Traversal
+#### 6.2.1 Main applications of TrieMap
 
-#### 6.1 What is a Graph (network)
+A trie is a specialized search tree data structure used to store and retrieve strings from a dictionary or set. There are various applications of this data structure, such as autocomplete and spellchecker.
+
+<img src="src/trie1.png" alt="eg" width="200"/> 
+
+While other data structures like balanced trees and hash tables can be used to search for words, Tries offer advantages in certain operations:
+
+- Prefix Searches: Tries excel in finding all keys with a common prefix.
+- Lexicographical Ordering: They allow efficient enumeration of keys in lexicographical order.
+- Space Efficiency: For keys with common prefixes, Tries use less space compared to hash tables, which can suffer from hash collisions and increased search times as they grow.
+
+#### 6.2.2 Basic Structure of Trie Nodes
+
+Trie is essentially an N-ary tree where each node has the following attributes:
+
+- Up to R links to its children, with **each link corresponding to one of R possible character values**. For example, R=26 for lowercase Latin letters. R=256 for ASCII codes.
+- A boolean field indicating whether the node marks the end of a key or is just a prefix (optional).
+
+```Python
+# Trie node implementation
+class TrieNode():
+    def __init__(self):
+        # self.val = None
+        self.links = [None]*26
+        self.isEnd = False
+      
+    def containsKey(self, ch: str) -> bool:
+        return self.links[ord(ch)-ord('a')] is not None # ord('a')=97
+
+    def put(self, ch: str, node: 'TrieNode') -> None:
+        self.links[ord(ch)-ord('a')]=node
+
+    def remove(self,ch: str) -> None:
+        self.links[ord(ch)]-ord('a')=None
+
+    def get(self, ch: str) -> 'TrieNode':
+        # get the child node
+        return self.links[ord(ch)-ord('a')]
+    
+    def setEnd(self) -> None:
+        self.isEnd = True
+
+    def isEnd(self) -> bool:
+        return self.isEnd
+```
+
+- In a trie node, the children array index is meaningful and represent a character. For example, if children[97] is not None, it means it stores a character 'a' as 'a' is coded as 97 in ASCII.
+- A node can have 256 children indices but most of them will be empty.
+- Trie uses edges to store the string (key) and uses self.val to store the value corrsponding to the key.
+- In leetcode problems, if the inputs only contain charaters a-z, you can resize the children array to have 26 slots or use hashmap to index the characters.
+
+<img src="src/trie2.png" alt="eg" width="400"/> 
+
+#### 6.2.3 Implementing Trie
+
+- Based on the TrieNode Definition Above
+
+```Python
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word:str) ->None:
+        # start from root
+        node = self.root
+        for ch in word:
+            # if node links (children) do not contain the character
+            if not node.containsKey(ch):
+                # insert the character at a new child link
+                node.put(ch, TrieNode())
+            # iterate to the newly inserted child link
+            node = node.get(ch)
+        node.setEnd()
+    
+    def startsWith(self, prefix: str) ->bool:
+        '''Returns true if there is a previously inserted string word that has the prefix prefix, and false otherwise.'''
+        node = self.root
+        for ch in prefix:
+            if node.containsKey(ch):
+                node = node.get(ch)
+            else:
+              return False
+        return True
+
+    def search(self, word:str) -> bool:
+      '''Returns true if the string word is in the trie (i.e., was inserted before), and false otherwise.'''
+        self.startsWith(word)
+        return node.isEnd()
+
+```
+- Trie with Simplified TrieNode class: links as a hashmap
+```Python
+class TrieNode:
+'''Simple Trie node - just what you need for most problems'''
+    def __init__(self):
+        self.children = {}  # Use dict instead of 256-element array
+        self.is_end = False  # Mark end of word (simpler than storing values)
+
+class Trie:
+'''Simplified Trie for LeetCode problems'''
+    def __init__(self):
+       self.root = TrieNode()
+    def insert(self, word):
+       """Insert a word into the trie"""
+       node = self.root
+       for char in word:
+           if char not in node.children:
+               node.children[char] = TrieNode()
+           node = node.children[char]
+       node.is_end = True
+    def search(self, word):
+       """Search if word exists in trie"""
+       node = self.root
+       for char in word:
+           if char not in node.children:
+               return False
+           node = node.children[char]
+       return node.is_end
+    def starts_with(self, prefix):
+       """Check if any word starts with prefix"""
+       node = self.root
+       for char in prefix:
+           if char not in node.children:
+               return False
+           node = node.children[char]
+       return True
+    def find_words_with_prefix(self, prefix):
+       """Find all words starting with prefix"""
+       node = self.root
+       # Navigate to prefix end
+       for char in prefix:
+           if char not in node.children:
+               return []
+           node = node.children[char]
+       # DFS to collect all words
+       result = []
+       self._dfs(node, prefix, result)
+       return result
+    def _dfs(self, node, path, result):
+       """DFS helper to collect words"""
+       if node.is_end:
+           result.append(path)
+       for char, child in node.children.items():
+           self._dfs(child, path + char, result)
+```
+- Basic Trie without TrieNode class (node as hashmaps): most common coding template
+
+```Python
+class BasicTrie:
+'''Copy-paste template for most LeetCode problems'''
+
+    def __init__(self):
+       self.root = {}
+    def insert(self, word):
+       node = self.root
+       for c in word:
+           if c not in node:
+               node[c] = {}
+           node = node[c]
+       node['$'] = True  # End of word marker
+    def search(self, word):
+       node = self.root
+       for c in word:
+           if c not in node:
+               return False
+           node = node[c]
+       return '$' in node
+    def starts_with(self, prefix):
+       node = self.root
+       for c in prefix:
+           if c not in node:
+               return False
+           node = node[c]
+       return True
+
+```
+
+
+### 7. Graph Structure and Traversal
+
+#### 7.1 What is a Graph (network)
 
 A graph models how different things are connected to each other, such as social networks. They are made up of nodes and edges.
 
@@ -1271,7 +1453,7 @@ Thus, if a graph has `E` much smaller than `V^2` (a *sparse graph*), the adjacen
 
 The greatest advantage of the adjacency matrix lies in its mathematical power. Some subtle properties of the graph can be revealed through sophisticated matrix operations.
 
-#### 6.2 Graph Structure Depth-First Search (DFS) and Breadth-First Search (BFS)
+#### 7.2 Graph Structure Depth-First Search (DFS) and Breadth-First Search (BFS)
 
 Graph traversal is an extension of N-ary Tree Traversal. The main traversal methods are Depth-First Search (DFS) and Breadth-First Search (BFS). 
 
@@ -1281,7 +1463,7 @@ Specifically, when traversing all "nodes" of a graph, use a `visited` array (or 
 
 If the problem states that the graph has no cycles, then graph traversal is exactly the same as N-ary tree traversal. No need to use `visited` or `onPath`. 
 
-#### 6.2.1 Depth First Search
+#### 7.2.1 Depth First Search
 
 1. Traversing all the nodes with `visited` dictionary:
 ```Python
@@ -1395,7 +1577,7 @@ The algorithm for traversing all paths has a relatively high time complexity. In
 
 Comapred to BFS, DFS is more efficient for problems where exploring all possible solutions, pathfinding that does not require the shortest path, and depth-first exploration (e.g., finding the deepest nodes, cycle detection, or backtracking problems) is needed.
 
-#### 6.2.2 Breadth-First Search (BFS)
+#### 7.2.2 Breadth-First Search (BFS)
 
 - Two types of questions BFS helps to answer:
   1) Is there a path from one node to another?
