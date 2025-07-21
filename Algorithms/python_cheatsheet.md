@@ -33,7 +33,7 @@
 ### Data Strucures
 
 - Double-ended queue (essentially doubly linked list) in Python: ```from collections import deque``` 
-  - Compared to a standard queue (FIFO - First In First Out queue), it offers additional operations: insertion and removal of elements at both the head and the tail: ```popleft()```, ```appendleft()```
+  - Compared to a standard queue (FIFO - First In First Out queue), it offers additional operations: insertion and removal of elements at both the head and the tail with O(1) time complexity: ```popleft()```, ```appendleft()```
   - Used to implement stack: ```pop()``` (remove from top), ```append()```(append to top)
   - Used to implement level order traversal
 
