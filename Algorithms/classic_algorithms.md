@@ -82,6 +82,32 @@ def traverse(root: TreeNode):
     traverse(child)
 ```
 
+#### 1.3 Recursion
+
+"Loops may achieve a performance gain for your program. Recursion may achieve a performance gain for your programmer." There's no performance benefit to using recursion. Loops are sometimes better for performance.
+
+Recursion is when a function calls itself. Every recursive function has **two cases: the base case and the recursive case**. The base case is when the function doesn't call itself  so it doesn't go into an infinite loop.
+
+A stack is a simple data structure with only two actions: push and pop. Push is to add a new item to the top, and pop is to remove the topmost item and read it. 
+
+In the context of calling a function, computers use a stack internally called the **call stack** to save variables for nested function calls. When you call a function from another function, the 2nd function call is placed on top of the call stack and the 1st function is paused in a partially completed state. All the varibles for the 1st function are still stored in memory. You return back to the 1st function after you're done with the 2nd function call (it is poped out of the call stack).
+
+The call stack can get very large and takes up too much memory. At that point, you can rewrite your code to use a loop instead. Or consider advanced techniques like tail recursion.
+
+A resursive example:
+```Python
+def fact(x):
+    if x ==1:
+        return 1
+    else:
+        return x*fact(x-1)
+
+fact(3)
+```
+![eg](src/call_stack1.png)
+![eg](src/call_stack.png)
+
+
 ### 2. Overview of Double-Pointer Techniques
 
 Whenever you have a sorted array, you should think of the two-pointer technique.
@@ -202,30 +228,102 @@ def right_bound(nums, target):
   
   return right if nums[right]== target else -1
 ```
-### 4. Recursion
+### 4. Backtracking
 
-"Loops may achieve a performance gain for your program. Recursion may achieve a performance gain for your programmer." There's no performance benefit to using recursion. Loops are sometimes better for performance.
+#### 4.1 What is the backtracking algorithm? 
 
-Recursion is when a function calls itself. Every recursive function has **two cases: the base case and the recursive case**. The base case is when the function doesn't call itself  so it doesn't go into an infinite loop.
+Abstractly speaking, solving a backtracking problem is actually the process of traversing a decision tree, where each leaf node contains a valid answer. If you **traverse the whole tree and collect the answers at the leaf nodes**, you will get all valid solutions.
 
-A stack is a simple data structure with only two actions: push and pop. Push is to add a new item to the top, and pop is to remove the topmost item and read it. 
+At any node in the backtracking tree, you only need to consider three things:
 
-In the context of calling a function, computers use a stack internally called the **call stack** to save variables for nested function calls. When you call a function from another function, the 2nd function call is placed on top of the call stack and the 1st function is paused in a partially completed state. All the varibles for the 1st function are still stored in memory. You return back to the 1st function after you're done with the 2nd function call (it is poped out of the call stack).
+1. **Path**: the choices you have already made.
+2. **Choice List**: the choices you can make at this point.
+3. **End Condition**: the condition for reaching the bottom of the decision tree where you cannot make any more choices.
 
-The call stack can get very large and takes up too much memory. At that point, you can rewrite your code to use a loop instead. Or consider advanced techniques like tail recursion.
+The general framework for backtracking in code is as follows:
 
-A resursive example:
 ```Python
-def fact(x):
-    if x ==1:
-        return 1
-    else:
-        return x*fact(x-1)
-
-fact(3)
+result = []
+def backtrack(path, choices):
+    if end condition is met:
+        # add the entire path to the results at the end 
+        result.add(path)
+        return
+    
+    for choice in choices:
+        ### make a choice: record the path, and update choice set (if needed)
+        path.add(choice) # record the path
+        
+        backtrack(path, choices)
+        # undo choice: reset the path and choice set as needed
+        path.pop()
 ```
-![eg](src/call_stack1.png)
-![eg](src/call_stack.png)
+
+The core concept is **recursion within a for loop, making a choice before the recursive call and undoing the choice after the call**. It is quite simple. 
+
+- Permutation problem as an example
+
+  Backtracking can be used to explore all possible permutation of numbers [1,2,3]:
+
+  <img src="src/backtrack1.png" width="400"/>
+
+  The backtrack function we define acts like a pointer, traversing this tree while correctly maintaining each node's attributes. When it reaches a leaf node, the **"path" constitutes a permutation**.
+
+  Notice that the pre and post-order actions in backtracking algorithm are **inside** the for loop. This is one difference from DFS. By making a choice before the recursive call and undoing it afterward, we can correctly manage the choice list and path for each node.
+
+  <img src="src/backtrack2.png" width="400"/> 
+
+#### 4.2 Difference with Dynamic Programming
+
+Both dynamic programming and backtracking algorithms abstract problems into tree structures at their core and traverse with recursion, but their approaches are entirely different:
+
+- Recursion Function
+
+  - In backtracking, we **traverse the binary tree once to get the answer**. As a result the function signature ```backtrack()``` generally acts as a pointer and has no return value. We rely on updating external variables to compute results.
+  - In dynamic programming, we **decompose the problem to calculate the answer**. As such, the function signature  ```dp()``` usually has a return value, which is the result of the sub-problem's computation.
+
+- High Time Complexity
+
+  Backtracking algorithm is **purely brute-force enumeration, generally with high complexity**. In the permutation example, the  time complexity cannot be lower than O(N!) because exhaustive traversal of the entire decision tree is unavoidable. In the end, you must enumerate N! permutation results.
+  
+  This is different from dynamic programming, which can be optimized through solving overlapping subproblems.
+
+#### 4.3 Difference with DFS
+
+Backtracking algorithm and the commonly mentioned DFS (Depth-First Search) algorithm can basically be considered the same: they are both used as a traversal pointer and do not return values. That is, ```return``` is just to end the recursion and we use external variables to record results.
+
+ **Their difference is only in the details**:
+
+- The difference is about **whether "make a choice" and "undo a choice" are inside or outside the for loop**. In DFS, it is outside. In backtracking, it is inside.
+
+- Why is there this difference? We need to understand it together with the binary tree structure. DP, DFS, and backtracking can all be seen as extensions of binary tree problems. The difference is what they focus on:
+  - Dynamic Programming (DP) is about breaking down problems (divide and conquer). It focuses on the return value of the **"subtree"**.
+  - Backtracking is about traversal. It focuses on the **"branches" between nodes**.
+  - DFS is also about traversal. It focuses on **one "node" at a time**.
+
+```Python
+# The DFS algorithm puts the logic of "making a choice" and "undoing a choice" outside the for loop
+def dfs(root):
+    if root is None:
+        return 
+    # make a choice
+    print("enter node %s" % root)
+    for child in root.children:
+        dfs(child)
+    # undo a choice
+    print("leave node %s" % root)
+
+# The backtracking algorithm puts the logic of "making a choice" and "undoing a choice" inside the for loop
+def backtrack(root):
+    if root is None:
+        return
+    for child in root.children:
+        # make a choice
+        print("I'm on the branch from %s to %s" % (root, child))
+        backtrack(child)
+        # undo a choice
+        print("I'll leave the branch from %s to %s" % (child, root))
+```
 
 
 ### 5. Dynamic Programming
@@ -298,7 +396,7 @@ When converting a top-down solution to a bottom-up solution, we can still use th
 
 #### 5.3 When to use DP
 
-- The first characteristic that is common in DP problems is that the problem will ask for the optimum value (maximum or minimum) of something, or the number of ways there are to do something. 
+- The first characteristic that is common in DP problems is that the problem will ask for the **optimum value (maximum or minimum) of something, or the number of ways there are to do something**. 
 
   - What is the minimum cost of doing...
   - What is the maximum profit from...
@@ -308,7 +406,7 @@ When converting a top-down solution to a bottom-up solution, we can still use th
 
 But the above is not sufficient to tell if a problem should be solved with DP. The next characteristic will help us determine whether a problem should be solved using a greedy algorithm or dynamic programming. 
 
-- The second characteristic that is common in DP problems is that future "decisions" depend on earlier decisions. 
+- The second characteristic that is common in DP problems is that **future "decisions" depend on earlier decisions**. 
 
 Deciding to do something at one step may affect the ability to do something in a later step. This characteristic is what makes a greedy algorithm invalid for a DP problem - we need to factor in results from previous decisions.
 

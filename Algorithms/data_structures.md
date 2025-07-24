@@ -685,9 +685,9 @@ The Inorder Traversal of a BST is ordered. This is an importatnt property to sol
 
 In summary, the general thought process when encountering a binary tree problem is:
 
-1. Traversal: Can the answer be obtained by traversing the binary tree once? If so, use a **traverse function with external variables**.
+1. **Traversal (DFS/backtracking)**: Can the answer be obtained by traversing the binary tree once? If so, use a **traverse function with external variables and no return value**.
 
-2. Decompose: Can you define a **recursive** function to derive the answer to the original problem from the answers to **subproblems (subtrees)**? If so, write this recursive function's definition and make full use of its return value.
+2. **Decompose (dynamic programming)**: Can you define a **recursive** function to derive the answer to the original problem from the answers to **subproblems (subtrees)**? If so, write this recursive function's definition and make full use of its return value.
 
 3. Regardless of the approach, understand what each node of the binary tree needs to do and when it should be done (preorder, inorder, postorder).
 
@@ -776,7 +776,7 @@ With this approach, each node has its own depth variable, which is the most flex
 
 #### 5.3.3 DFS versus BFS
 
-1. BFS is often used to find the shortest path:
+1. BFS is often used to find the **shortest path**:
 
 Due to the level-by-level traversal logic of BFS, the path taken when the target node is first encountered is the shortest path. The algorithm may not need to traverse all nodes to finish early. DFS can also be used to find the shortest path, but it must traverse all nodes to obtain the shortest path.
 

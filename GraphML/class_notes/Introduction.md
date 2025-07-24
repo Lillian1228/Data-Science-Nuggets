@@ -20,8 +20,10 @@ This Course:
 
   <img src="src/0_4.png" width="500">
 - Representation learning: How do we design the architecture end to end without needing to do feature engineering?
+  
   <img src="src/0_5.png" width="500">
   Intuitively, representation learning is to learn a function that maps nodes to d-dimensional embeddings such that similar ndoes in the netowrk are embedded close together.
+  
   <img src="src/0_6.png" width="500">
 
 Course outlines:

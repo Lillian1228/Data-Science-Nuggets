@@ -24,7 +24,7 @@
 - In Python loops, continue and pass statements serve different purposes:
   - continue statement skips the rest of the current iteration
   - pass is a placeholder that does nothing
-- all() function takes an iterable (e.g., a list, tuple, set, dictionary) as its argument and returns True if all elements in the iterable are true. i.e. all(x==1 for x in list)
+- ```all()``` function takes an iterable (e.g., a list, tuple, set, dictionary) as its argument and returns True if all elements in the iterable are true. i.e. all(x==1 for x in list)
 - using the built-in memo decorator for DP problem:
   - from functools import cache, lru_cache
   - @cache or @lru_cache(None)
@@ -43,3 +43,9 @@
   - ```heapq.nsmallest(n, iterable, key=None)```: Returns a list with the n smallest elements from the iterable.
   - ```heapq.heapify(iterable)```: heapify a list of values or tuples
   - ```heapq.heappop(iterable)```: pop the smallest element (minheap)
+- Python List: 
+  - An empty list evaluates to False in a boolean context:  ```if not my_list``` means my_list is not empty
+  - ```list.sort()``` will sort the list ascendingly in place and return None. ```list.sort(reverse=True)``` will do descendingly. 
+  - ```sorted(list)``` returns a new sorted list without modifying the original list. 
+  - Remove elements by value (return None): ```list.remove(value)```
+  - Remove elements by index (return the element): ```list.pop(index)```
