@@ -340,6 +340,26 @@ Although the Big O notation remains O(N * log(N)), the actual number of operatio
 
 ### 9. Counting Sort
 
+The idea of counting sort is simple: count how many times each element appears, then figure out the index of each element in the sorted array, and finally finish sorting.
+
+It is a non-comparison-based sorting algorithm that operates by **counting the occurrences of each distinct element** in the input array. It is particularly **efficient for sorting collections of objects with small positive integer keys** or when the range of key values is not significantly larger than the number of items.
+
+The time and space complexity of counting sort is **$O(n+max−min)$**, where 
+n is the length of the array, and max−min is the range of the numbers in the array.
+
+```Python
+from collections import Counter
+def CountingSort(self, nums: List[int]) -> None:
+        # count the frequency of distinct numbers
+        count = Counter(nums)
+        # fill the original array according to the count array
+        index = 0
+        for element in range(len(count)): # note that we assumed the distinct numbers range from 0 to n.
+            for _ in range(count[element]):
+                nums[index] = element
+                index += 1
+```
+
 ### 10. Bucket Sort
 
 ### 11. Radix Sort

@@ -21,6 +21,12 @@
 
 ### Built-in Functions
 
+  -  Quick counter to get the frequency of elements in a Python list: 
+  
+      ```Python
+      from collections import Counter
+      frequency = Counter(my_list)
+      ```
 - In Python loops, continue and pass statements serve different purposes:
   - continue statement skips the rest of the current iteration
   - pass is a placeholder that does nothing
@@ -32,7 +38,9 @@
 
 ### Data Strucures
 
-- Double-ended queue (essentially doubly linked list) in Python: ```from collections import deque``` 
+- Double-ended queue (essentially doubly linked list) in Python: 
+
+  ```from collections import deque``` 
   - Compared to a standard queue (FIFO - First In First Out queue), it offers additional operations: insertion and removal of elements at both the head and the tail with O(1) time complexity: ```popleft()```, ```appendleft()```
   - Used to implement stack: ```pop()``` (remove from top), ```append()```(append to top)
   - Used to implement level order traversal
@@ -46,6 +54,7 @@
 - Python List: 
   - An empty list evaluates to False in a boolean context:  ```if not my_list``` means my_list is not empty
   - ```list.sort()``` will sort the list ascendingly in place and return None. ```list.sort(reverse=True)``` will do descendingly. 
+  - ```list.sort(key=lambda x: x[0])``` sort by the first element in a list of lists.
   - ```sorted(list)``` returns a new sorted list without modifying the original list. 
   - Remove elements by value (return None): ```list.remove(value)```
   - Remove elements by index (return the element): ```list.pop(index)```
