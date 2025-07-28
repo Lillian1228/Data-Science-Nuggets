@@ -17,7 +17,7 @@
 - Exponentiation operator: ```x**2``` (square), ```x**0.5``` (square root)
 - Division operators 
   - Truncation to zero: discard the fractional part and move the number closer to zero. ```int(7 / 3)``` is 2; ```int(-7 / 3)``` is -2
-  - Floor division: round the result down the nearest whole number. ```int(7 / 3)``` is 2; ```int(-7 / 3)``` is -3.
+  - Floor division: round the result down the nearest whole number. ```7 // 3``` is 2; ```-7 // 3``` is -3.
 
 ### Built-in Functions
 
