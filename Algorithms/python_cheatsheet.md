@@ -21,7 +21,7 @@
 
 ### Built-in Functions
 
-  -  Quick counter to get the frequency of elements in a Python list: 
+-  Quick counter to get the frequency of elements in a Python list: 
   
       ```Python
       from collections import Counter
@@ -35,6 +35,40 @@
   - from functools import cache, lru_cache
   - @cache or @lru_cache(None)
 - Convert a single-character string to the index position in the Unicode character set: ```ord('a')``` &rarr; 97; Inversely, convert a Unicode index to the corresponding character: ```chr(65)``` &rarr; 'A'
+
+### Standard Libraries
+
+- Array binary search: locate the insertion index for x in array a to maintain sorted order.
+  - bisect_left: if x is already present in a, the index will be before any existing entries.
+  - bisect_right: if x is already present in a, the index will be after (to the right of) any existing entries of x in a.
+
+  ```Python
+  from bisect import bisect_right, bisect_left
+  idx = bisect_left(a, x, lo=0, hi=len(a)) # index of the leftmost element that's <x
+  idx = bisect_right(a, x, lo=0, hi=len(a)) # index of the rightmost element that's <=x +1
+  ```
+- Sorted Containers
+  - ```SortedList()```:  sorted mutable sequence
+  ```Python
+  from sortedcontainers import SortedDict, SortedList
+
+  l = SortedList()
+  l.add(x)
+  l.update(iterable) # Update sorted list by adding all values from iterable
+  l.remove(x) # Remove value from sorted list
+  l.pop(index=-1) # Remove and return value at index in sorted list
+  l.bisect_right(x) # look up values
+  ```
+  - ```SortedDict()```: A sorted map keeps the stored key-value pairs sorted based on the key.
+  ```Python
+  d = SortedDict()
+  d[key]=value # add
+  value = d.pop(key) # Remove and return value for item identified by key.
+  kv_pair = d.popitem(index=-1) # Remove and return (key, value) pair at index from sorted dict.
+  value = d.get(key, default=None) # Return the value for key if key is in the dictionary, else default.
+  kv_pair = d.peekitem(index=-1) # Return (key, value) pair at index in sorted dict
+  d.bisect_right(k) # index of the rightmost key that's <=k +1
+  ```
 
 ### Data Strucures
 
@@ -58,3 +92,8 @@
   - ```sorted(list)``` returns a new sorted list without modifying the original list. 
   - Remove elements by value (return None): ```list.remove(value)```
   - Remove elements by index (return the element): ```list.pop(index)```
+- Tuple ```t = ("apple",)```: a number of values separated by commas. 
+  - Tuples are immutable. Once being created, its values cannot be updated, appended, sorted or removed. However, you can concatenate tuples into a new one.
+  - Heterogeneous in nature: elements can be multiple data types. Great for storing immutable key-value pairs. Iterating through a 'tuple' is faster than in a 'list'. 
+  - We generally use 'tuples' for heterogeneous (different) data types and 'lists' for homogeneous (similar) data types.
+  - Unpack values in a list of tuples: ```for k, v in list_of_tuples```
