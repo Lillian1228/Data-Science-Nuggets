@@ -543,3 +543,118 @@ The key insight is that hooks let you extend Claude Code's capabilities by integ
     - Clear feedback - provides meaningful error messages
 
     While this specific example focuses on .env files, the same pattern can protect any sensitive files or directories in your project. You can extend the logic to check for multiple file patterns or implement more sophisticated access controls based on your security requirements.
+
+- Why two  ```settings.json``` files
+
+    You may notice that after running the  ```npm run dev``` command there are two  ```settings.json``` files in the  ```.claude``` directory. This is to solve the problem of having different absolute paths across machines.
+
+    Claude Code documentation recommends using absolute paths (rather than relative paths) for scripts. This helps mitigate path interception and binary planting attacks. This recommendation also makes it much more challenging to share settings.json files. 
+
+    To solve this problem, our project has a ```settings.example.json``` file. Inside of it, the script references contain a ```$PWD``` placeholder. When we run ```npm run setup```, some dependencies are installed, but it also runs an ```init-claude.js``` script placed inside the scripts directory. This script will replace those ```$PWD``` placeholder with the absolute path to the project on your machine, copy the ```settings.example.json``` file, and rename it to ```settings.local.json```.
+
+    This script allows us to share settings.json files but still use the recommended absolute paths! 
+
+#### Using Hooks for Large Projects
+
+Claude Code hooks can help address common weaknesses in AI-assisted development, particularly on larger projects. These hooks run automatically when Claude makes changes to your code, providing immediate feedback and preventing common issues.
+
+- TypeScript Type Checking Hook
+
+    Problem: when Claude modifies a function signature, it often doesn't update all the places where that function is called throughout your project. 
+    
+    Example: if you ask Claude to add a verbose parameter to a function in schema.ts, it will successfully update the function definition but miss the call site in main.ts. This creates type errors that Claude doesn't immediately catch.
+
+    Solution: post-tool-use hook that runs the TypeScript compiler after every file edit
+    - Runs ```tsc --noEmit``` to check for type errors
+    - Captures any errors found
+    - Feeds the errors back to Claude immediately
+    - Prompts Claude to fix the issues in other files
+
+    This hook works for any typed language where you can run a type checker. For untyped languages, you could implement similar functionality using automated tests instead.
+- Query Duplication Prevention Hook
+
+    Problem: In larger projects with many database queries, Claude sometimes creates duplicate functionality instead of reusing existing code. This is especially problematic when you give Claude complex, multi-step tasks that include database operations as just one component.
+
+    Example: Consider a project structure with multiple query files, each containing many SQL functions. When you ask Claude to "create a Slack integration that alerts about orders pending longer than 3 days," it might write a new query instead of using the existing ```getPendingOrders()``` function.
+
+    Solution: The query duplication hook addresses this by implementing a pre-tool-use review process.
+    - Triggers when Claude modifies files in the ```./queries``` directory
+    - Launches a separate instance of Claude Code programmatically
+    - Asks the second instance to review the changes and check for similar existing queries
+    - If duplicates are found, provides feedback to the original Claude instance
+    - Prompts Claude to remove the duplicate and use the existing functionality
+  
+- Implementation Considerations
+
+    The TypeScript hook is relatively lightweight and runs quickly. The query duplication hook requires more resources since it launches a separate Claude instance for each review.
+
+    For the query hook, consider these trade-offs:
+
+    - Benefits: Cleaner codebase with less duplication
+    - Costs: Additional time and API usage for each query directory edit
+    - Recommendation: Only monitor critical directories to minimize overhead
+    
+    The hooks use Claude's TypeScript SDK to programmatically interact with the AI. This allows you to create sophisticated workflows where one Claude instance can review and provide feedback on another's work.
+
+- Inspecting inputs to your hooks
+
+    There are more hooks beyond the PreToolUse and PostToolUse hooks discussed in this course. There are also:
+
+    - Notification - Runs when Claude Code sends a notification, which occurs when Claude needs permission to use a tool, or after Claude Code has been idle for 60 seconds
+    - Stop - Runs when Claude Code has finished responding
+    - SubagentStop - Runs when a subagent (these are displayed as a "Task" in the UI) has finished
+    - PreCompact - Runs before a compact operation occurs, either manual or automatic
+
+    The stdin input to your commands will change based upon the type of hook being executed (PreToolUse, PostToolUse, Notification, etc). This can make writing hooks challenging - you might not know the exact structure of the input to your command!
+
+    To handle this challenge, it is recommended to use a hook like this:
+
+    ```json
+    "PostToolUse": [ // Or "PreToolUse" or "Stop", etc
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq . > post-log.json"
+          }
+        ]
+      },
+    ]
+    ```
+
+    It will write the input to this hook to the ```post-log.json``` file, which allows you to inspect exactly what would have been fed into your command! This makes it a lot easier for you to understand what data your command should inspect.
+
+#### Claude Code SDK
+
+The Claude Code SDK lets you run Claude Code programmatically from within your own applications and scripts. It's available for TypeScript, Python, and via the CLI, giving you the same Claude Code functionality you use at the terminal but integrated into larger workflows.
+
+<img src="src/8.png" width="600">  
+
+- Permissions and Tools
+
+    By default, the SDK only has read-only permissions. It can read files, search directories, and perform grep operations, but it cannot write, edit, or create files.
+
+    To enable write permissions, you can add the ```allowedTools``` option to your query:
+
+    ```typescript
+    for await (const message of query({
+      prompt,
+      options: {
+        allowedTools: ["Edit"]
+      }
+    })) {
+      console.log(JSON.stringify(message, null, 2));
+    }
+    ```
+    Alternatively, you can configure permissions in your settings file within the .claude directory for project-wide access.
+
+- Practical Applications
+
+    The Claude Code SDK shines when integrated into larger development workflows. Consider using it for:
+
+    - Git hooks that automatically review code changes
+    - Build scripts that analyze and optimize code
+    - Helper commands for code maintenance tasks
+    - Automated documentation generation
+    - Code quality checks in CI/CD pipelines
