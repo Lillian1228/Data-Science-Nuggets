@@ -297,7 +297,7 @@ Backtracking algorithm and the commonly mentioned DFS (Depth-First Search) algor
 - The difference is about **whether "make a choice" and "undo a choice" are inside or outside the for loop**. In DFS, it is outside. In backtracking, it is inside.
 
 - Why is there this difference? We need to understand it together with the binary tree structure. DP, DFS, and backtracking can all be seen as extensions of binary tree problems. The difference is what they focus on:
-  - Dynamic Programming (DP) is about breaking down problems (divide and conquer). It focuses on the return value of the **"subtree"**.
+  - Dynamic Programming (DP) is about breaking down problems (divide and conquer). It focuses on the return value of the **"subtree"**. It is optimized with memorization.
   - Backtracking is about traversal. It focuses on the **"branches" between nodes**.
   - DFS is also about traversal. It focuses on **one "node" at a time**.
 

@@ -21,19 +21,31 @@
 
 ### Built-in Functions
 
-  -  Quick counter to get the frequency of elements in a Python list: 
+- Creating a copy of a list
+  - Shallow Copy: ```list.copy()``` or ```list[:]```creates a new list, but the elements within the new list are still references to the original elements.
+  - Deep Copy: creates a new list and recursively copies all nested objects within it. This ensures that the copied list is completely independent of the original list, and changes to nested objects in the copied list will not affect the original. 
+
+    ```Python
+      import copy
+      original_list = [1, 2, [3, 4]]
+      copied_list = copy.deepcopy(original_list)
+      ```
+  - To update the elements in a list without affecting the original elements, we can also shallow copy each of the elements directly. 
+-  Quick counter to get the frequency of elements in a Python list: 
   
       ```Python
       from collections import Counter
       frequency = Counter(my_list)
       ```
 - In Python loops, continue and pass statements serve different purposes:
-  - continue statement skips the rest of the current iteration
-  - pass is a placeholder that does nothing
+  - ```continue``` statement skips the rest of the current iteration
+  - ```pass``` is a placeholder that does nothing
+
 - ```all()``` function takes an iterable (e.g., a list, tuple, set, dictionary) as its argument and returns True if all elements in the iterable are true. i.e. all(x==1 for x in list)
-- using the built-in memo decorator for DP problem:
-  - from functools import cache, lru_cache
-  - @cache or @lru_cache(None)
+- Built-in memo decorator for DP problem or recursive function memorization:
+  - ```from functools import cache, lru_cache```
+  - Add the decorator right above the recursive function: ```@cache``` for python 3.9+ or ```@lru_cache(maxsize=None)``` for earlier version
+
 - Convert a single-character string to the index position in the Unicode character set: ```ord('a')``` &rarr; 97; Inversely, convert a Unicode index to the corresponding character: ```chr(65)``` &rarr; 'A'
 
 ### Data Strucures
@@ -58,3 +70,14 @@
   - ```sorted(list)``` returns a new sorted list without modifying the original list. 
   - Remove elements by value (return None): ```list.remove(value)```
   - Remove elements by index (return the element): ```list.pop(index)```
+
+### Common Error Checking
+
+1. Index out of range
+
+    - In while loop, make sure to prevent the pointer from moving out of range 
+    
+    ```Python
+    while i<n and iterable[i] is True: 
+      i+=1
+    ```

@@ -1330,7 +1330,7 @@ class Trie:
     def find_words_with_prefix(self, prefix):
        """Find all words starting with prefix"""
        node = self.root
-       # Navigate to prefix end
+       # Navigate to prefix end       
        for char in prefix:
            if char not in node.children:
                return []
