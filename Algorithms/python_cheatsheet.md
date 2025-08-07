@@ -18,6 +18,12 @@
 - Division operators 
   - Truncation to zero: discard the fractional part and move the number closer to zero. ```int(7 / 3)``` is 2; ```int(-7 / 3)``` is -2
   - Floor division: round the result down the nearest whole number. ```7 // 3``` is 2; ```-7 // 3``` is -3.
+- Factorial function: can be used to formulate the binomial coefficient and efficiently compute how many ways one could choose k elements from p+k elements.
+  
+  ```Python
+  from math import factorial
+  num_ways = factorial(p+k)//factorial(p)//factorial(k)
+  ```
 
 ### Built-in Functions
 
@@ -37,6 +43,9 @@
       from collections import Counter
       frequency = Counter(my_list)
       ```
+    - Counter objects can be compared using ```==``` sign.
+    - No need to explicitily initialize a key with a value of 1 before incrementing it: ```my_counter['apple'] += 1```
+    - Delete keys: ```del counter(k)```
 - In Python loops, continue and pass statements serve different purposes:
   - ```continue``` statement skips the rest of the current iteration
   - ```pass``` is a placeholder that does nothing
@@ -71,7 +80,7 @@
   l.pop(index=-1) # Remove and return value at index in sorted list
   l.bisect_right(x) # look up values
   ```
-  - ```SortedDict()```: A sorted map keeps the stored key-value pairs sorted based on the key.
+  - ```SortedDict()```: A sorted map keeps the stored key-value pairs **sorted based on the key**.
   ```Python
   d = SortedDict()
   d[key]=value # add
@@ -81,7 +90,16 @@
   kv_pair = d.peekitem(index=-1) # Return (key, value) pair at index in sorted dict
   d.bisect_right(k) # index of the rightmost key that's <=k +1
   ```
+- ```from collecitons import OrderedDict()```: Using built-in classes usually yields better time complexity.
+  - OrderedDict maintains the **insertion order** of elements. The order in which key-value pairs are added to the dictionary is preserved.
 
+  ```Python
+  cache = OrderedDict()
+  cache[key1]=value1
+  cache[key2]=value2
+  cache.move_to_end(key1, last=True) # moves the key to the end (or start)
+  cache.popitem(last=False) # remove the first element (or last)
+  ```
 ### Data Strucures
 
 - Double-ended queue (essentially doubly linked list) in Python: 
@@ -105,7 +123,7 @@
   - Remove elements by value (return None): ```list.remove(value)```
   - Remove elements by index (return the element): ```list.pop(index)```
 
-### Common Error Checking
+### Common Error Checking before Submission
 
 1. Index out of range
 
@@ -115,3 +133,7 @@
     while i<n and iterable[i] is True: 
       i+=1
     ```
+2. Function parameters: does the function call have required input params?
+3. Time Limit Exceeded Error
+   
+   - Use cache for DP functions
