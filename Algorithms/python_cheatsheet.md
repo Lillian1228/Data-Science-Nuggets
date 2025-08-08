@@ -113,8 +113,10 @@
   - heaps can store not only values, but also **tuples**, i.e. (value to be sorted on, object or index associated with the value). heapq will primarily sort based on the first element of the tuple, and then use the second element (the index) as a tie-breaker if values are equal.
   - ```heapq.nlargest(n, iterable, key=None)```: Returns a list with the n largest elements from the iterable.
   - ```heapq.nsmallest(n, iterable, key=None)```: Returns a list with the n smallest elements from the iterable.
-  - ```heapq.heapify(iterable)```: heapify a list of values or tuples
+  - ```heapq.heapify(iterable)```: heapify a list of values or tuples, returns None.
   - ```heapq.heappop(iterable)```: pop the smallest element (minheap)
+  - ```heapq.heappush(iterable, new)```: push the new element to heap. 
+  
 - Python List: 
   - An empty list evaluates to False in a boolean context:  ```if not my_list``` means my_list is not empty
   - ```list.sort()``` will sort the list ascendingly in place and return None. ```list.sort(reverse=True)``` will do descendingly. 
