@@ -51,6 +51,28 @@ source ~/.bash_profile
 ```
 - Local installation in terminal every time: ```npx @anthropic-ai/claude-code``` 
 
+### Setup Claude Code for other LLMs
+
+- Kimi K2
+
+    1. Open the command file using cursor: ```cursor ~/.zshrc``` (Mac) or ```cursor ~/.bashrc``` (Win)
+
+    2. At the top of the file create a custom function such as:
+
+        ```zsh
+        kimi() {
+            export ANTHROPIC_BASE_URL="https://api.moonshot.ai/anthropic/"
+            export ANTHROPIC_AUTH_TOKEN="your-api-key"
+            claude "$@"
+        }
+        ```
+    3. Save and activate the file in the terminal: ```source ~/.zshrc```
+
+    4. Call ```kimi``` to trigger the env setup and route API calls to kimi url.
+
+
+
+
 ### Practical Techniques
 
 #### Adding context
