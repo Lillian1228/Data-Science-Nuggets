@@ -323,7 +323,7 @@ toDelete.prev = None
 
 Run times for reading, insertion, and deletion: 
 
-|          | Arrays  | Lists   |
+|          | Arrays  | Linked Lists   |
 | -------- | ------- | ------- |
 | Reading  | O(1)    | O(n)    |
 | Insertion| O(n)    | O(1)*    |
@@ -331,7 +331,7 @@ Run times for reading, insertion, and deletion:
 
 *assuming you can instantly access the to be deleted/inserted.
 
-- Arrays are faster at reads, while linked lists are faster at ubserts and deletes.
+- Arrays are faster at reads, while linked lists are faster at inserts and deletes.
 - Arrays allow random access, while linked lists only allow sequential access, reading the elements one by one starting at the first.
 
 ### 3. Queue and Stack
