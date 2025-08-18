@@ -113,7 +113,7 @@
   - heaps can store not only values, but also **tuples**, i.e. (value to be sorted on, object or index associated with the value). heapq will primarily sort based on the first element of the tuple, and then use the second element (the index) as a tie-breaker if values are equal.
   - ```heapq.nlargest(n, iterable, key=None)```: Returns a list with the n largest elements from the iterable.
   - ```heapq.nsmallest(n, iterable, key=None)```: Returns a list with the n smallest elements from the iterable.
-  - ```heapq.heapify(iterable)```: heapify a list of values or tuples, returns None.
+  - ```heapq.heapify(iterable)```: heapify a list of values or tuples, returns None. (No need to heapify an empty or single element list)
   - ```heapq.heappop(iterable)```: pop the smallest element (minheap)
   - ```heapq.heappush(iterable, new)```: push the new element to heap. 
   
@@ -125,6 +125,7 @@
   - Remove elements by value (return None): ```list.remove(value)```
   - Remove elements by index (return the element): ```list.pop(index)```
   - Serialize a list to a string separated by comma: ```",".join(list)``` (List elements must be of string type as well); Deserialize a string to list: ```data.split(",")```
+
 
 ### Common Error Checking before Submission
 
@@ -140,3 +141,7 @@
 3. Time Limit Exceeded Error
    
    - Use cache for DP functions
+   - When a list lookup is needed, convert the list to set. ```x in list``` &rarr; O(N) whereas ```x in set``` &rarr; O(1).
+
+      Why: A Python set is implemented as a hash table (just like dict keys). Python computes the hash value of x, then jumps directly to the memory bucket where that value should be stored.
+
