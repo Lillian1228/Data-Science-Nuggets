@@ -124,6 +124,7 @@
   - ```sorted(list)``` returns a new sorted list without modifying the original list. 
   - Remove elements by value (return None): ```list.remove(value)```
   - Remove elements by index (return the element): ```list.pop(index)```
+  - Serialize a list to a string separated by comma: ```",".join(list)``` (List elements must be of string type as well); Deserialize a string to list: ```data.split(",")```
 
 ### Common Error Checking before Submission
 
