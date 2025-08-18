@@ -46,16 +46,16 @@
     - Counter objects can be compared using ```==``` sign.
     - No need to explicitily initialize a key with a value of 1 before incrementing it: ```my_counter['apple'] += 1```
     - Delete keys: ```del counter(k)```
-- In Python loops, continue and pass statements serve different purposes:
+- Python loops
   - ```continue``` statement skips the rest of the current iteration
   - ```pass``` is a placeholder that does nothing
+  - ```zip()``` takes multiple iterables (like lists) as arguments and returns an iterator that produces tuples.
 
 - ```all()``` function takes an iterable (e.g., a list, tuple, set, dictionary) as its argument and returns True if all elements in the iterable are true. i.e. all(x==1 for x in list)
 - Built-in memo decorator for DP problem or recursive function memorization:
   - ```from functools import cache, lru_cache```
   - Add the decorator right above the recursive function: ```@cache``` for python 3.9+ or ```@lru_cache(maxsize=None)``` for earlier version
 
-- Convert a single-character string to the index position in the Unicode character set: ```ord('a')``` &rarr; 97; Inversely, convert a Unicode index to the corresponding character: ```chr(65)``` &rarr; 'A'
 
 ### Standard Libraries
 
@@ -124,8 +124,13 @@
   - ```sorted(list)``` returns a new sorted list without modifying the original list. 
   - Remove elements by value (return None): ```list.remove(value)```
   - Remove elements by index (return the element): ```list.pop(index)```
-  - Serialize a list to a string separated by comma: ```",".join(list)``` (List elements must be of string type as well); Deserialize a string to list: ```data.split(",")```
+  - Serialize a list to a string separated by comma: ```",".join(list)``` (List elements must be of string type as well)
 
+- String
+  - ```char.isdigit()``` check if a character is a digit (0-9)
+  - Deserialize a string to list: ```data.split(",")```
+  - Remove spaces in a string: ```data.replace(" ","")```
+  - Convert a single-character string to the index position in the Unicode character set: ```ord('a')``` &rarr; 97; Inversely, convert a Unicode index to the corresponding character: ```chr(65)``` &rarr; 'A'
 
 ### Common Error Checking before Submission
 
