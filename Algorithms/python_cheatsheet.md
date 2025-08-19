@@ -46,10 +46,26 @@
     - Counter objects can be compared using ```==``` sign.
     - No need to explicitily initialize a key with a value of 1 before incrementing it: ```my_counter['apple'] += 1```
     - Delete keys: ```del counter(k)```
+- General-purpose dictionary subclass ```from collections import  defaultdict```
+  - Automatic initialization of new keys to 0: ```defaultdict(int)```
+  - Automatic initialization of new keys to an empty list: ```defaultdict(list)```
+  
+  ```Python
+  # Create a defaultdict where the default value for a new key is an empty list
+  cities_by_country = defaultdict(list)
+
+  # Iterate through the data and append cities to the corresponding country's list
+  for country, city in city_data:
+    cities_by_country[country].append(city)
+  ```
 - Python loops
   - ```continue``` statement skips the rest of the current iteration
   - ```pass``` is a placeholder that does nothing
-  - ```zip()``` takes multiple iterables (like lists) as arguments and returns an iterator that produces tuples.
+- ```zip()``` takes multiple iterables (like lists) as arguments and returns an iterator that produces tuples.
+    ```Python
+    # zip multiple lists and sort them together
+    jobs = sorted(zip(startTime, endTime, profit), key=lambda x:x[1])
+    ```
 
 - ```all()``` function takes an iterable (e.g., a list, tuple, set, dictionary) as its argument and returns True if all elements in the iterable are true. i.e. all(x==1 for x in list)
 - Built-in memo decorator for DP problem or recursive function memorization:
@@ -59,14 +75,15 @@
 
 ### Standard Libraries
 
-- Array binary search: locate the insertion index for x in array a to maintain sorted order.
+- Array binary search: locate the insertion index for x in array a to maintain sorted order. i.e. finding the non-overlapping occurence for interval problems.
   - bisect_left: if x is already present in a, the index will be before any existing entries.
   - bisect_right: if x is already present in a, the index will be after (to the right of) any existing entries of x in a.
 
   ```Python
   from bisect import bisect_right, bisect_left
-  idx = bisect_left(a, x, lo=0, hi=len(a)) # index of the leftmost element that's <x
-  idx = bisect_right(a, x, lo=0, hi=len(a)) # index of the rightmost element that's <=x +1
+  my_list = [10, 20, 20, 30, 40]
+  idx = bisect_left(my_list, 20, lo=0, hi=len(a)) # output 1
+  idx = bisect_right(a, x, lo=0, hi=len(a)) # output 3
   ```
 - Sorted Containers
   - ```SortedList()```:  sorted mutable sequence
