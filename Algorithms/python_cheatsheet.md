@@ -145,6 +145,7 @@
 
 - String
   - ```char.isdigit()``` check if a character is a digit (0-9)
+  - ```string.find(sub)```: locate the first occurrence of a specified substring within a given string. Return the lowest index where the substring begins, or -1 if not found.
   - Deserialize a string to list: ```data.split(",")```
   - Remove spaces in a string: ```data.replace(" ","")```
   - Convert a single-character string to the index position in the Unicode character set: ```ord('a')``` &rarr; 97; Inversely, convert a Unicode index to the corresponding character: ```chr(65)``` &rarr; 'A'
