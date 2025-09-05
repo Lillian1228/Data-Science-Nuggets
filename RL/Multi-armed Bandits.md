@@ -60,7 +60,7 @@ to long-past rewards. (See more under incremental implementation)
 
     Why: Whichever actions are initially selected, the reward is less than the starting estimates; the learner switches to other actions, being “disappointed” with the rewards it is receiving. The result is that all actions are tried several times before the value estimates converge.
 
-### Key Learning Methods: **Upper-Confidence-Bound (UCB) Action Selection**
+### Key Learning Methods: Upper-Confidence-Bound (UCB) Action Selection
 
 Selects actions by considering both the estimated value and a **measure of uncertainty (or variance) in that estimate**. Actions with lower value estimates or less frequent selections are subtly favored for exploration. 
 
@@ -82,7 +82,7 @@ UCB selects the best arm based on:
 
 UCB often performs well but is harder to extend to more general reinforcement learning problems with large state spaces or nonstationary environments.
 
-### Key Learning Methods: **Thompson Sampling Action Selection**
+### Key Learning Methods: Thompson Sampling Action Selection
 
 Thompson Sampling (aka **posterior sampling** or **Bayesian bandits**) is a **probabilistic exploration** method for the multi-armed bandit problem. It learns distributions over action values (belief about expected reward for each arm).
 
@@ -94,9 +94,17 @@ How Thompson Sampling Works:
 1. Model Uncertainty with Priors
     - Each arm’s reward distribution is assumed to come from a prior (e.g., Beta for Bernoulli rewards, Gaussian for normal rewards). Maintain priors for each arm a.
     - Example: For a Bernoulli bandit (success/failure), start with Beta(1,1) (uniform prior).
+
+      <img src="src/6.png" width="400"/> 
+
+      - When alpha = beta, the distribution is symmetric with its peak increasing as alpha and beta increase together
+      - When alpha > beta, the distribution shifts to the right, the higher alpha is compared to beta, the more right it goes and the peak also increases
+      - When alpha < beta, the distribution shifts to the left, the higher beta is compared to alpha, the more left it goes and the peak also increases
+
 2. Update Posterior with Observations
     - After pulling an arm and seeing a reward, update its posterior reward distribution.
     - For example, in Bernoulli rewards: If arm a has been pulled s times with r successes, posterior = Beta(r+1,s−r+1).
+    - Thus, more successful arms will shift to the right (like the blue distribution in above diagram) and will have a higher chance of being picked, but there is still some chance for the other arms to get picked as they will be present at the lower ends of the distributions.
 3. Action Selection (The Thompson Step)
     - For each arm, sample a “candidate mean reward” from its posterior.
     - Select the arm with the **highest sampled value**.
@@ -107,7 +115,7 @@ Key Characteristics:
 - Arms with strong evidence of high reward get consistently high samples, so they dominate later (exploitation).
 - This balances exploration and exploitation naturally, without tuning an exploration parameter like in ϵ-greedy.
 
-### Key Learning Methods: **Gradient Bandit Algorithms (Softmax Learning Policy)** 
+### Key Learning Methods: Gradient Bandit Algorithms (Softmax Learning Policy)
 
 Unlike ϵ-greedy, UCB, or Thompson Sampling, which are about estimating action values and picking the best, the gradient bandit method directly learns a policy (a probability distribution over actions). 
 
@@ -462,3 +470,25 @@ Over time, the system **learns which articles work best for which types of users
 - But most big tech platforms now run hybrid systems: 
     - Bandits for exploration / cold-start.
     - Deep RL for long-term optimization.
+
+---
+
+### Comparison with A/B Testing
+
+#### Scenarios for MAB to work better than AB Testing
+
+- Time sensitivity to exploit and maximize the rewards i.e. recommending holiday deals
+- Cost of mistake is low so that MAB can explore and make low stake mistakes. i.e. exploring optimal guest fee % in Airbnb
+- Personalization - no universal best but situational best i.e. what if there're no meaningful differences of success between two variants overall, but there could be segmentwise differences (heterogeneous treatment effect).
+
+#### Limitation
+
+- Bandits are not good at optimizing multiple objectives
+
+  - Short-term greedy policy and long-term trade-off
+
+    Policies derived from the contextual bandit formulation are greedy in the sense that they do not take long-term effects of actions into account. These policies effectively **treat each visit to a website as if it were made by a new visitor uniformly sampled from the population of the website’s visitors**. By **not using the fact that many users repeatedly visit the same websites**, greedy policies do not take advantage of possibilities provided by long-term interactions with individual users.
+
+- Bandits take acions based on cumulative rewards and hence are not well suited in nonstationary environments i.e. distringuishing weekday patterns
+
+- Challenges on making causal inference and ensuring consistent user experiences
