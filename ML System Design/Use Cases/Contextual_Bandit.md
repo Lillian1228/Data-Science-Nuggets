@@ -24,7 +24,8 @@ The business success metric is focusing on the increase in engagement (CTR) amon
   - Frequency caps per message per user (e.g., ≤4 exposures in a month)
 
     &rarr; Eligibility and frequency capping need not to be handled by the MAB model at the message ranking stage as they happen during the re-ranking stage controlled by rec engine. But they could affect what the users see and their effects are baked into the system inputs.  
-  - Slots K for different devices: web - 3 tiles at different positions, app - 2 tiles.
+
+  - Single slot on homepage for 30 NBA messages
 
   - Limited customer data during initial onboarding period i.e. missing income, assets, age etc. that can be used for personalization
 
@@ -58,8 +59,7 @@ The business success metric is focusing on the increase in engagement (CTR) amon
         - Plan-level: employer features (industry, size, enrollment type)
     - Arms (A): Eligible messages for this user at this moment - each with metadata: 
       - topic, format, risk category, historical CTR, novelty age, campaign priority
-    - Rewards (r): A single scalar per impression or per session with delayed credit.
-      -  r = 0.05 * click + 1.0 * key_task_completed + 0.2 * qualified_view_benefit
+    - Rewards (r): A single scalar per impression or per session factoring multiple objectives (clicks and task completions).
       - Weights are tunable; use business value or Shapley-style attribution. Time-decay rewards so earlier completions are worth more.
       -  Assign delayed rewards back to their triggering message with a reasonable window (e.g., 7–14 days) and last-touch or fractional credit.
 
@@ -86,17 +86,66 @@ The business success metric is focusing on the increase in engagement (CTR) amon
 
     The reward signal in this domain is very sparse because users usually do not click on an engager, and user clicking is very random so that returns have high variance.
 
-why per-item propensities?
+
+
+### 5. Offline Policy Evaluation
+
+#### Replay Method
+
+
+
+- Why Replay and Not Other Unbiased Estimator Methods?
+
+
+#### Policy Selection
+
+
+
+
+#### Multi-objective method comparison
+
+We tested several methods below to create the multi-objective rewards:
+
+- Baseline Single-Objective Model
+    - Train a baseline, CTR-only MAB model with production configuration.
+- OR Model
+    - Train a MAB model on logical OR label aggregation: CTR OR task_completed
+- Linear Label Aggregation
+    - Train a MAB model on linearly aggregated labels:
+    - Label: α * Click +(1-α) task_completed where α is a hyperparameter in [0,1] interval.
+
+
+We trained one model targeting baseline CTR label & OR labels, respectively.
+We then trained 50 models for each alpha on a [0,1] interval, and averaged resulting metrics on 0.1 interval (5 models per interval).
+
+We selected the best models for each method above based on the validation set. Then we evaluated performance metrics on test data such as CTR@1, Task_Completion@1, Precision@1 for CTR, and Precision@1 for Task_Completion.
+
+&rarr; Linear label aggregation with alpha between 0.6-0.7 (best tuned from validation) performed the best considering both CTR@1 and Task_Completion@1 - CTR is almost equal to CTR-only baseline, whereas task completion rate is 26% higher.
+
+#### Model Training Specs
+
+
+
+#### Evaluation Metrics
+
+
+
+
+
+
+
+
+### 6. Deployment and Serving
+
+- Batch Scoring
+
+
+#### Online Learning
+
+
+
 how to handle rewards at different positions: would randomization solve?
 batch scoring instead of real-time
-
-
-
-### 5. Model Development
-
-
-- Policy Selection based on Offline Simulation
-
 
 
 
@@ -105,10 +154,3 @@ batch scoring instead of real-time
     1. Greedy optimization: maximizing only the immediate clicks and did not take the long-term effects of recommendations into account.
 
         Use a supervised model to estimate the probability of a click as a function of user features. Then we define an "epsilon-greedy policy that selected with probability 1-epsilon the engager predicted by the supervised model to have the highest probability of producing a click, and otherwise selected from the other engagers uniformly at random.
-
-
-
-### 6. Deployment and Serving
-
-- Batch Scoring
-
