@@ -1,7 +1,11 @@
 
+### Traditional Survival Analysis
 
-Here’s a structured extraction of the **DeepHit project (AAAI 2018)** based on a machine learning system design framework:
+- Assumptions in Survival Analysis
+  - **Independent censoring**: Conditional on the features, the event time T is *independent* of the censoring time C. That is, people don't get censored (drop out of study early) as a result of approaching the event. i.e. getting too sick to attend the measurement
+  - **Proportional hazards** (for CPH): the hazard ratio between two groups or for a given covariate remains constant over time. This means the relative risk of an event occurring is unchanging, regardless of when the event happens.
 
+  <img src="src/stat1.png" width="600"> 
 ---
 
 ### 1. Business Problem, Objective, and Constraints
