@@ -161,6 +161,35 @@ $$
 
 **Cons:** Sometimes worse generalization than SGD; still needs LR tuning.
 
+```Python
+import numpy as np
+
+def adam_optimizer(f, grad, x0, learning_rate=0.001, beta1=0.9, beta2=0.999, epsilon=1e-8, num_iterations=10):
+	"""
+    grad: A function that computes the gradient of f
+    """
+	x = x0
+    
+    # vector initialization
+    m=np.zeros_like(x)
+    v=np.zeros_like(x)
+
+    for t in range(1, num_iterations+1):
+
+        g = grad(x)
+
+        # moments update
+        m = beta1*m + (1-beta1)*g
+        v = beta2*v + (1-beta2)*(g**2)
+        # bias correction is decoupled from m,v update to avoid overwrite
+        m_hat = m/(1-beta1**t) 
+        v_hat = v/(1-beta2**t)
+        # parameter update
+        x = x - learning_rate*m_hat/(np.sqrt(v_hat)+epsilon)
+
+    return x
+```
+
 ### 4.2 **AdamW (2017)**
 
 **Motivation**: 
@@ -194,6 +223,19 @@ So **AdamW never redefines $g_t$** — it only decouples the shrinkage from the 
 **Pros:** Fixes Adam’s poor regularization; now the default in vision and transformers.
 
 **Cons:** Still more complex than SGD.
+
+```Python
+import numpy as np
+
+def adamw_update(w, g, m, v, t, lr, beta1, beta2, epsilon, weight_decay):
+    m_new = beta1 * m + (1 - beta1) * g
+    v_new = beta2 * v + (1 - beta2) * (g ** 2)
+    m_hat = m_new / (1 - beta1 ** t)
+    v_hat = v_new / (1 - beta2 ** t)
+    w = w - lr * weight_decay * w  # decoupled weight decay
+    w_new = w - lr * m_hat / (np.sqrt(v_hat) + epsilon)
+    return w_new, m_new, v_new
+```
 
 ### **Nadam (2016)**
 

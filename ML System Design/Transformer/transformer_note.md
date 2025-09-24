@@ -1,4 +1,85 @@
 
+### 0. Supervised Seq2Seq Translation Task
+
+- Data Setup
+
+    Parallel corpora: sentences in a source language paired with their translations in a target language (e.g. English ↔ German, English ↔ French).
+
+    Say we have a toy machine translation example:
+
+    * **Source (input to encoder):** “She eats apples”
+    * **Target (ground truth translation):** “Elle mange des pommes”
+
+    Assume we're using tokens, and there are special tokens:
+
+    * `<bos>` = “beginning of sequence” (start token)
+    * `<eos>` = “end of sequence”
+
+    So target sequence with symbols might be:
+    `<bos> Elle mange des pommes <eos>`
+
+- What Fed into Training
+
+    There are two parts:
+
+    1. **Encoder input**
+
+        The encoder receives the source sentence: “She eats apples” → embedding + positional encoding, etc.
+
+    2. **Decoder input** and **decoder output (labels)**
+
+        The decoder is given the **correct previous tokens** (from the target sentence) up to that point, with `<bos>` as the first token. 
+        
+        It predicts the next token. For the labels / what the model must predict, we use the target sequence without `<bos>`, but with `<eos>` at the end (depending on implementation).
+        
+        The decoder has masked self-attention so it can't “peek ahead” at future target tokens when predicting. 
+        
+        So concretely:
+
+        | Time step | Decoder input token (with teacher forcing) | Expected output (label) |
+        | --------- | ------------------------------------------ | ----------------------- |
+        | 1         | `<bos>`                                    | “Elle”                  |
+        | 2         | “Elle”                                     | “mange”                 |
+        | 3         | “mange”                                    | “des”                   |
+        | 4         | “des”                                      | “pommes”                |
+        | 5         | “pommes”                                   | `<eos>`                 |
+
+- Loss Function
+
+    At each decoding time step $t$, the decoder attends to:
+
+    1. The encoder outputs (for the source “She eats apples”).
+    2. The past **decoder input tokens** up to time $t$ (but *not* future target tokens beyond $t$). This is enforced using *masked self-attention* in the decoder so it can’t “see ahead.”
+
+    The model produces a probability distribution over the vocabulary at each time step $t$ (for the output token).
+
+    We compare that predicted distribution with the **ground truth label** for that time step (from the table above). Usually we use cross-entropy loss.
+
+    They also use techniques like **label smoothing** on the ground truth distributions (so the target is not a perfect one-hot).
+
+    Sum (or average) the loss across time steps / tokens and across the batch.
+
+- Why this is teacher forcing
+
+    * Because during training, **instead of using the model’s own previous output** as the input for the next decoding step, we always use the **ground truth previous token** (“Elle”, “mange”, etc.).
+
+    * If we didn’t do that, at step 2 we might feed in whatever the model predicted at step 1, which could be wrong — that error would compound. Teacher forcing *fixes* that by always staying on-track during training.
+
+- Inference (when not training)
+
+    When generating a translation at inference, you don’t have the ground truth target sequence. So you can’t shift it, or feed it in.
+
+    Instead, you do *autoregressive generation*:
+
+    1. You start with `<bos>`.
+    2. The model predicts a token (say it predicts “Elle”).
+    3. Then you feed “Elle” back in as the next decoder input, predict again → “mange” etc.
+    4. Continue until `<eos>` or max length.
+
+
+
+
+
 
 ### 1. **High-Level Architecture**
 
