@@ -26,4 +26,4 @@ Collection of Learning Resources & Review Notes for DS:
 
 ### Paper Discussion
 
-- "Attention is All You Need": [link to note](transformer_note.md) | [link to paper](https://arxiv.org/abs/1706.03762)
+- "Attention is All You Need": [link to note](ML%20System%20Design/transformer_note.md) | [link to paper](https://arxiv.org/abs/1706.03762)
