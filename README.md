@@ -26,4 +26,19 @@ Collection of Learning Resources & Review Notes for DS:
 
 ### Paper Discussion
 
-- "Attention is All You Need": [link to note](ML%20System%20Design/Transformer/transformer_note.md) | [link to paper](https://arxiv.org/abs/1706.03762)
+- NLP
+  
+  "Attention is All You Need": [link to note](Papers/Transformer/transformer_note.md) | [link to paper](https://arxiv.org/abs/1706.03762)
+
+  "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding": [link to note](Papers/BERT/BERT_note.md) | [link to paper](https://arxiv.org/pdf/1810.04805)
+
+- Multi Modality
+  
+  CLIP - "Learning Transferable Visual Models From Natural Language Supervision": [link to note](Papers/CLIP/clip_note.md) | [link to paper](https://arxiv.org/pdf/2103.00020)
+
+- Computer Vision
+  
+  DINO - [link to note](Papers/DINO/dino_note.md)
+  - "Emerging Properties in Self-Supervised Vision Transformers": [link to paper](https://arxiv.org/pdf/2104.14294)
+  - "DINOv2: Learning Robust Visual Features without Supervision": [link to paper](https://arxiv.org/pdf/2304.07193)
+  - "DINOv3": [link to paper](https://arxiv.org/pdf/2508.10104)

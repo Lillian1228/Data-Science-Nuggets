@@ -70,6 +70,9 @@ arr[0] = 100
 # find index by element value, time complexity O(N)
 index = arr.index(666)
 ```
+
+In Python, a list is a **dynamic array**. It functions like a standard array—providing fast, indexed access to elements—but overcomes the fixed-size limitation of static arrays by automatically resizing itself when elements are added or removed.
+
 #### 2.2 Linked list (Chain Storage)
 
 #### 2.2.1 Introduction

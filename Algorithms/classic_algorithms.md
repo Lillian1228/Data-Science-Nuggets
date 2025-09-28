@@ -1,3 +1,6 @@
+### Roadmap
+![eg](src/1.png)
+
 
 ### 1. Foundamental Ideas
 
@@ -333,10 +336,13 @@ Dynamic Programming (DP) is a programming paradigm that can systematically and e
 
 - The problem can be broken down into "**overlapping subproblems**" - smaller versions of the original problem that are re-used multiple times.
 - The problem has an "**optimal substructure**" - an optimal solution can be formed from optimal solutions to the overlapping subproblems of the original problem.
+- **Memoization**: Dynamic programming often uses memoization (storing the results of expensive function calls and returning the cached result when the same inputs occur again) to build the solution bottom-up. 
 
 Using Fibonacci sequence as an example, If you wanted to find the n-th Fibonacci number F(n), you can break it down into smaller subproblems - find 
 F(n−1) and F(n−2) instead. Then, adding the solutions to these subproblems together gives the answer to the original question, F(n−1)+F(n−2)=F(n), which means the problem has **optimal substructure**, since a solution F(n) to the original problem can be formed from the solutions to the subproblems. 
 These subproblems are also **overlapping** - for example, we would need F(4) to calculate both F(5) and F(6).
+
+
 
 #### Comparison with Divide and Conquer
 
