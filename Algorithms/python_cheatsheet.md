@@ -150,6 +150,10 @@
   - Remove spaces in a string: ```data.replace(" ","")```
   - Convert a single-character string to the index position in the Unicode character set: ```ord('a')``` &rarr; 97; Inversely, convert a Unicode index to the corresponding character: ```chr(65)``` &rarr; 'A'
 
+- Dictionary
+  - ```hashmap.get(key, 0)``` get the corresponding value of a key. Return 0 if not exists. It can be used to initialize new-key value pairs w/o checking key existence. i.e. incremental frequency update for key ```hashmap[key] = hashmap.get(key, 0)+1```
+  
+
 ### Common Error Checking before Submission
 
 1. Index out of range

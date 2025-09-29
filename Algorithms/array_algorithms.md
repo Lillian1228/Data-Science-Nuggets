@@ -65,10 +65,74 @@ class NumMatrix:
 
 To solve both of these problems, you need a more advanced data structure. The most common solution is a **segment tree**.
 
-Leetcode Problems:
-
-[238. Product of Array Except Self](https://leetcode.com/problems/product-of-array-except-self/description/)
+#### Problem Type 1 - Prefix Sum
 
 [304. Range Sum Query 2D - Immutable](https://leetcode.com/problems/range-sum-query-2d-immutable/description/)
 
+#### Problem Type 2 - Prefix Product
+
+[238. Product of Array Except Self](https://leetcode.com/problems/product-of-array-except-self/description/)
+
 [1352. Product of the Last K Numbers](https://leetcode.com/problems/product-of-the-last-k-numbers/description/)
+
+#### Problem Type 3 - Prefix Sum + Hashmap
+
+Use prefix sum + hashmap when you need to:
+- Find subarrays/intervals fulfilling a target sum/property
+- Do it in linear time
+- Require instant lookup of previous sums/first positions
+
+[525. Contiguous Array](https://leetcode.com/problems/contiguous-array/description/)
+
+[560. Subarray Sum Equals K](https://leetcode.com/problems/subarray-sum-equals-k/description/)
+
+
+### Difference Array
+
+The Prefix Sum Technique is mainly used when the **original array does not change**, and you need to quickly find the sum of any interval. 
+
+Another technique, Difference Array, is mainly used when you need to **frequently increase or decrease the values in a range** of the original array.
+
+#### Intuition
+
+Instead of modifying every single element in a given range, which is O(N), we can **build a diff array** just like the prefix sum using a preSum array. The diff array will record only the changes at the beginning and end of each range. This enables quick increase/decrease over a range of elements.
+
+#### How it Works
+
+1. **Create the difference array**: First, create a new array, diff, of the same size as the original array, but initialized with zeros.
+   
+   <img src="src/array1.png" width="300"> 
+
+   ```Python
+   diff = [0] * len(nums)
+    # Construct the difference array
+    diff[0] = nums[0]
+    for i in range(1, len(nums)):
+        diff[i] = nums[i] - nums[i - 1]
+   ```
+2. **Mark the boundaries**: For each range update operation (e.g., adding a value v to all elements from index l to r):
+    1. Add v to diff[i] to mark the beginning of the change. ```diff[l]+=v```
+    2. Subtract v from diff[r+1] to "cancel out" the effect of the update after the range ends. ```diff[r+1]-=v```
+    3. If r+1 is outside the array bounds, this step can be skipped.
+
+   <img src="src/array2.png" width="300"> 
+
+    ```Python
+    def increment(i: int, j: int, val: int) -> None:
+        self.diff[i] += val
+        if j + 1 < len(self.diff):
+            self.diff[j + 1] -= val
+   ```
+3. **Compute the final array**: After all range updates have been applied to the diff array, compute its prefix sum. The prefix sum of the diff array gives you the final, updated version of the original array.
+
+    ```Python
+    res = [0] * len(diff)
+    # construct the result array based on the difference array
+    res[0] = diff[0]
+    for i in range(1, len(diff)):
+        res[i] = res[i - 1] + diff[i]
+   ```
+#### Problem Variation
+
+[1094. Car Pooling](https://leetcode.com/problems/car-pooling/description/)
+
