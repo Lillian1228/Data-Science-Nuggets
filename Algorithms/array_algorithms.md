@@ -1,7 +1,7 @@
 ### Roadmap
 ![eg](src/1.png)
 
-### Prefix Sum
+## Prefix Sum
 
 Computational method used to speed up queries about the sum of elements within any range of an array. The core idea is a space-for-time tradeoff: by spending linear time to pre-process an array, you can answer subsequent range sum queries in constant time.
 
@@ -86,6 +86,8 @@ Use prefix sum + hashmap when you need to:
 
 [560. Subarray Sum Equals K](https://leetcode.com/problems/subarray-sum-equals-k/description/)
 
+[974. Subarray Sums Divisible by K](https://leetcode.com/problems/subarray-sums-divisible-by-k/description/)
+
 
 ### Difference Array
 
@@ -136,3 +138,89 @@ Instead of modifying every single element in a given range, which is O(N), we ca
 
 [1094. Car Pooling](https://leetcode.com/problems/car-pooling/description/)
 
+## Tricks to Traverse 1D/2D Array
+
+#### Reverse 1D Array
+
+ ```Python
+# reverse a list with extra O(N) space
+mylist = mylist[::-1] 
+
+# reverse a list in place
+ def reverse(s: list, l, r):
+     while l<r:
+         s[l], s[r] = s[r], s[l]
+         l+=1
+         r-=1
+```
+[151. Reverse Words in a String](https://leetcode.com/problems/reverse-words-in-a-string/)
+
+
+#### Rotate Matrix Clockwise/Counterclockwise
+
+- Clockwise 90-degree rotation for **square matrix** using linear algebra
+
+    Transpose and then reflect:
+
+    <img src="src/array3.png" width="500"> 
+    <img src="src/array4.png" width="500">  
+- Counterclockwise 90-degree rotation: **Reflect and then transpose**
+
+- Non-square matrices cannot be rotated in place as its shape change from (m,n) to (n,m).
+
+[48. Rotate Image](https://leetcode.com/problems/rotate-image/description/)
+
+#### Spiral Traversal of a Matrix
+
+Key idea: 
+- Follow the order of right-down-left-up to traverse the matrix
+- Define and shrink the boundaries of untraversed region with variables.
+
+<img src="src/array5.png" width="300"> 
+<img src="src/array6.png" width="300">  
+
+[54. Spiral Matrix](https://leetcode.com/problems/spiral-matrix/)
+
+
+## Two Pointer Techniques
+
+In arrays, there are no actual pointers, but we can treat indices as pointers in an array. This allows us to apply the two-pointer technique to arrays as well.
+
+The left-right pointers move toward each other or away from each other; the fast-slow pointers move in the same direction, with one moving faster than the other.
+
+### Fast-slow pointers
+
+#### 1. in-place array modification
+
+    - Iterate through the array with the fast pointer and check the element at the fast pointer's position
+    - Pass valid elements to the slow pointer's position and increment the slow pointer by 1 to prepare for the next valid element.
+
+   ```Python
+    def removeElement(self, nums: List[int], val: int) -> int:
+        fast, slow = 0, 0
+        while fast < len(nums): # iteration of fast pointer to the end
+            if nums[fast] != val: # find valid element
+                nums[slow] = nums[fast] # can be in-place copy / swap
+                slow += 1
+            fast += 1
+        return slow
+  ```
+[26. Remove Duplicates from Sorted Array](https://leetcode.com/problems/remove-duplicates-from-sorted-array/)
+
+[88. Merge Sorted Array](https://leetcode.com/problems/merge-sorted-array/)
+
+#### 2. Sliding Window
+
+### Left-right pointers
+
+#### 1. Binary Search
+
+
+#### 2. nSum Problem
+
+
+#### 3. Reversing an Array
+
+
+
+[977. Squares of a Sorted Array](https://leetcode.com/problems/squares-of-a-sorted-array/description/)
