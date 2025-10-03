@@ -135,6 +135,7 @@
   - ```heapq.heappush(iterable, new)```: push the new element to heap. 
   
 - Python List: 
+  - reverse the elements in a list: ```list(reversed(word_list))``` or ```word_list[::-1]```
   - An empty list evaluates to False in a boolean context:  ```if not my_list``` means my_list is not empty
   - ```list.sort()``` will sort the list ascendingly in place and return None. ```list.sort(reverse=True)``` will do descendingly. 
   - ```list.sort(key=lambda x: x[0])``` sort by the first element in a list of lists.
@@ -145,10 +146,17 @@
 
 - String
   - ```char.isdigit()``` check if a character is a digit (0-9)
+  - ```char.isalnum()``` check if a character is alphanumeric (letters and numbers)
   - ```string.find(sub)```: locate the first occurrence of a specified substring within a given string. Return the lowest index where the substring begins, or -1 if not found.
   - Deserialize a string to list: ```data.split(",")```
   - Remove spaces in a string: ```data.replace(" ","")```
+  - Remove leading and trailing spaces in a string: ```s.strip()``` 
+  - Lowercase and uppercase: ```s.lower()```, ```s.upper()```
   - Convert a single-character string to the index position in the Unicode character set: ```ord('a')``` &rarr; 97; Inversely, convert a Unicode index to the corresponding character: ```chr(65)``` &rarr; 'A'
+
+- Dictionary
+  - ```hashmap.get(key, 0)``` get the corresponding value of a key. Return 0 if not exists. It can be used to initialize new-key value pairs w/o checking key existence. i.e. incremental frequency update for key ```hashmap[key] = hashmap.get(key, 0)+1```
+  
 
 ### Common Error Checking before Submission
 
