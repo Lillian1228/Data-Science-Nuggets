@@ -109,3 +109,5 @@ The paper discusses scenarios where the model's performance may degrade, particu
 
 * **Code Availability**: The authors have released the code and pre-trained model weights at [https://github.com/OpenAI/CLIP](https://github.com/OpenAI/CLIP).
 
+
+<img src="src/3.png" width="500"/> 

@@ -192,8 +192,8 @@ The left-right pointers move toward each other or away from each other; the fast
 
 #### 1. in-place array modification
 
-    - Iterate through the array with the fast pointer and check the element at the fast pointer's position
-    - Pass valid elements to the slow pointer's position and increment the slow pointer by 1 to prepare for the next valid element.
+- Iterate through the array with the fast pointer and check the element at the fast pointer's position
+- Pass valid elements to the slow pointer's position and increment the slow pointer by 1 to prepare for the next valid element.
 
    ```Python
     def removeElement(self, nums: List[int], val: int) -> int:
@@ -207,20 +207,28 @@ The left-right pointers move toward each other or away from each other; the fast
   ```
 [26. Remove Duplicates from Sorted Array](https://leetcode.com/problems/remove-duplicates-from-sorted-array/)
 
+[80. Remove Duplicates from Sorted Array II](https://leetcode.com/problems/remove-duplicates-from-sorted-array-ii/description/)
+
 [88. Merge Sorted Array](https://leetcode.com/problems/merge-sorted-array/)
 
 #### 2. Sliding Window
 
 ### Left-right pointers
 
+
+[977. Squares of a Sorted Array](https://leetcode.com/problems/squares-of-a-sorted-array/description/)
+
+
 #### 1. Binary Search
 
 
 #### 2. nSum Problem
 
+[167. Two Sum II - Input Array Is Sorted](https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/description/)
 
 #### 3. Reversing an Array
 
 
+#### 4. Palindrome Check
 
-[977. Squares of a Sorted Array](https://leetcode.com/problems/squares-of-a-sorted-array/description/)
+[5. Longest Palindromic Substring](https://leetcode.com/problems/longest-palindromic-substring/description/)
