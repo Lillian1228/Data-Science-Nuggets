@@ -73,16 +73,50 @@ Key Considerstaions:
 
 
 
+[143. Reorder List](https://leetcode.com/problems/reorder-list/)
+
 #### 2. Decompose a Singly Linked List
 
 If we want to attach nodes from the original list to a new list instead of creating new nodes, it is often necessary to break the link between the nodes in the original list to prevent from forming cycles. 
 
 [86. Partition List](https://leetcode.com/problems/partition-list/description/)
 
-#### 3. The Middle Nodes of a Singly Linked List
+#### 3. The k-th Node from the End of a Singly Linked List
 
+- **Idea**: Maintain two pointers and update one with a delay of k steps.
+
+    Use dummy head as needed.
+
+[19. Remove Nth Node From End of List](https://leetcode.com/problems/remove-nth-node-from-end-of-list/description/)
+
+[82. Remove Duplicates from Sorted List II](https://leetcode.com/problems/remove-duplicates-from-sorted-list-ii/submissions/1796723748/)
 
 #### 4. Check if a Linked List has a cycle
 
+- **Idea**: Every time the slow pointer slow moves one step, the fast pointer fast moves two steps. If fast can reach the end of the list, then there is no cycle. If fast meets slow while moving, then fast must be running in a circle, so the list has a cycle.
+
+- **Why choose k=2**: once both pointers are in the cycle, the relative speed of f with respect to s is k-1. This means at each iteration the fat pointer gets k-1 steps closer to the slow one. k=2 i the only universal choice that guarantees a meeting regardless of the cycle length.
+
+- **Find the cycle start**: 
+
+    <img src="src/linkedlist6.png" width="400">
+    <img src="src/linkedlist7.png" width="400">  
+    
+    Once fast and slow pointers meet, set one of them to head and move both at the same speed. After k-m steps they will meet at the start of the cycle.
+
+[142. Linked List Cycle II](https://leetcode.com/problems/linked-list-cycle-ii/description/)
 
 #### 5. Check the Interaction of Linked Lists
+
+- **Idea**: The key is to find a way so that p1 and p2 can reach the intersection node c1 at the same time.
+
+    So, we can let p1 travel list A, then switch to list B after reaching the end. Similarly, let p2 travel list B, then switch to list A. In this way, it is as if the two lists are joined together.
+
+    By doing this, p1 and p2 will enter the common part at the same time, and reach the intersection node c1 together:
+
+    <img src="src/linkedlist8.png" width="400">
+    <img src="src/linkedlist9.png" width="400">   
+
+    If there is no intersection, the c1 node is null, and the algorithm will return null.
+
+[160. Intersection of Two Linked Lists](https://leetcode.com/problems/intersection-of-two-linked-lists/description/)

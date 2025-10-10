@@ -537,9 +537,10 @@ Because the underlying structure of a hash table is an array operation, The prim
 | Insertion| O(1)    | O(n)    | O(1)    |
 | Deletion | O(1)    | O(n)    | O(1)    |
 
-- Hash tables are great for catching duplicates.
+- Keys are unique and values are not necessarily. Hash tables are great for catching duplicates.
 - Only immutable objects can be stored as hashtable keys, i.e. string, integer. Arrays are mutable and thus cannot be keys. A changing key may cause accidental loss of the value. 
 - The traversal order of a hash table changes. This is because of capacity expansion when they reach a certain load factor, where the indices calculated by the hash function change.
+- It's not recommended to add or remove keys from a hash table while iterating over it (updatin avlues of existing keys are fine). This could raise errors due to internal resizing. Use a two phase approach: collect changes over iterations, then apply.
 
 
 ```Python
@@ -567,6 +568,10 @@ There are strategies to handle this, such as:
 While chaining and linear probing methods can resolve hash collisions, they may lead to performance degradation. To avoid frequent collisions, we need:
 - a low load factor (number of key-value pairs in hash table/ length of the underlying array). Resize and allocate more memory when the load facor is greater than 0.7 ( capacity expansion).
 - a good hash function that distributes values in the array evenly.
+
+#### 4.4 Hash Set
+
+The keys in a hash table are essentially a hash set. In Python, this is the ```Set``` class which allows O(1) lookups.
 
 ### 5. Binary Tree Structure and Traversal
 
