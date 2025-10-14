@@ -123,8 +123,10 @@
 
   ```from collections import deque``` 
   - Compared to a standard queue (FIFO - First In First Out queue), it offers additional operations: insertion and removal of elements at both the head and the tail with O(1) time complexity: ```popleft()```, ```appendleft()```
+    - In comparison to python list: ```pop(0)``` takes O(n) as it requires shifting subsequent elements.
   - Used to implement stack: ```pop()``` (remove from top), ```append()```(append to top)
   - Used to implement level order traversal
+
 
 - Min Heap Implemetation:  ```import heapq``` 
   - heaps can store not only values, but also **tuples**, i.e. (value to be sorted on, object or index associated with the value). heapq will primarily sort based on the first element of the tuple, and then use the second element (the index) as a tie-breaker if values are equal.
@@ -154,6 +156,9 @@
   - Lowercase and uppercase: ```s.lower()```, ```s.upper()```
   - Convert a single-character string to the index position in the Unicode character set: ```ord('a')``` &rarr; 97; Inversely, convert a Unicode index to the corresponding character: ```chr(65)``` &rarr; 'A'
 
+- Set
+  - ```set(string), set(list)``` converts a string or list to a set of unique characters or elements
+  - Deletion: ```hashset.remove(ele)``` raises an error if element not found; ```hashset.discard(ele)``` no error if missing; 
 - Dictionary
   - ```hashmap.get(key, 0)``` get the corresponding value of a key. Return 0 if not exists. It can be used to initialize new-key value pairs w/o checking key existence. i.e. incremental frequency update for key ```hashmap[key] = hashmap.get(key, 0)+1```
   
