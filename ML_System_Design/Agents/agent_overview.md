@@ -77,3 +77,24 @@ Action: get_weather("北京")
 ```
 Observation: 北京当前天气为晴，气温25摄氏度，微风。
 ```
+
+### 2. ReAct: Reason + Act
+
+ReAct was proposed by Shunyu Yao in 2022. Its core idea is to mimic how humans solve problems by explicitly combining Reasoning and Acting to form a "think-act-observe" loop. Before ReAct emerged, mainstream methods could be divided into two categories: 
+- one is the "pure thinking" type, such as **Chain-of-Thought**, which can guide models to perform complex logical reasoning but cannot interact with the external world and is prone to factual hallucinations.
+- the other is the "pure action" type, where models directly output actions to execute but lack planning and error correction capabilities.
+
+ReAct的巧妙之处在于，它认识到思考与行动是相辅相成的。思考指导行动，而行动的结果又反过来修正思考。为此，ReAct范式通过一种特殊的提示工程来引导模型，使其每一步的输出都遵循一个固定的轨迹：
+
+- Thought (思考)： 这是智能体的“内心独白”。它会分析当前情况、分解任务、制定下一步计划，或者反思上一步的结果。
+- Action (行动)： 这是智能体决定采取的具体动作，通常是调用一个外部工具，例如 Search['华为最新款手机']。
+- Observation (观察)： 这是执行Action后从外部工具返回的结果，例如搜索结果的摘要或API的返回值。
+
+智能体将不断重复这个 Thought -> Action -> Observation 的循环，将新的观察结果追加到历史记录中，形成一个不断增长的上下文，直到它在Thought中认为已经找到了最终答案，然后输出结果。这个过程形成了一个强大的协同效应：推理使得行动更具目的性，而行动则为推理提供了事实依据。
+
+<img src="src/react.png" width="600">  
+
+这种机制特别适用于以下场景：
+- 需要**外部知识**的任务：如查询实时信息（天气、新闻、股价）、搜索专业领域的知识等。
+- 需要**精确计算**的任务：将数学问题交给计算器工具，避免LLM的计算错误。
+- 需要**与API交互**的任务：如操作数据库、调用某个服务的API来完成特定功能。
