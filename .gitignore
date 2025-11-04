@@ -1,0 +1,4 @@
+# Environment variables
+# Matches .env files in root and all subdirectories
+.env
+**/.env
