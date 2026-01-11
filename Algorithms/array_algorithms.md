@@ -69,6 +69,9 @@ To solve both of these problems, you need a more advanced data structure. The mo
 
 [304. Range Sum Query 2D - Immutable](https://leetcode.com/problems/range-sum-query-2d-immutable/description/)
 
+[1314. Matrix Block Sum](https://leetcode.com/problems/matrix-block-sum/description/): more flexible definitions of the area bounds
+
+
 #### Problem Type 2 - Prefix Product
 
 [238. Product of Array Except Self](https://leetcode.com/problems/product-of-array-except-self/description/)
