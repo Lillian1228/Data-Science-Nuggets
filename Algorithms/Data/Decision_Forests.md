@@ -115,7 +115,11 @@ To limit overfitting a decision tree, apply one or all of the following regulari
 
 Because different variable importances inform about different aspects of the models, looking at several variable importances at the same time is informative.
 
-- Model-agnostic **permutation variable importances**: evaluates the increase in the prediction error of a model after permuting the feature's values.
+- Model-agnostic 
+    - **permutation variable importances**: evaluates the increase in the prediction error of a model after permuting the feature's values.
+    - **SHAP (SHapley Additive exPlanations)**: explain individual predictions or model-wise interpretation.
+
+        Ordinarily expensive to compute but can be speeded-up significantly for decision forests, so it is a good way to interpret decision forests.
 - Decision tree specific
   - sum of the split score with a given variable
   - number of nodes with a given variable
@@ -124,3 +128,148 @@ Because different variable importances inform about different aspects of the mod
 If a feature is important according to all the variable importances, this feature is likely important. 
 
 If a feature has a high "number of nodes" variable importance and a small "permutation" variable importance, then this feature might be hard to generalize and can hurt the model quality. i.e. this can happen when a feature is just an example identifier with no information to generalize.
+
+## Random Forests (RF)
+
+A random forest (RF) is an ensemble of decision trees in which each decision tree is trained with a specific random noise.
+
+### 1. Bagging (bootstrap aggregating)
+
+**Core Idea**: Train many models **independently** on different random versions of the data, then average them.
+
+**How it works**:
+1. Bootstrap sampling: Randomly sample the training data **with replacement** to create many datasets.
+2. Train a model on each sample: Usually decision trees.
+3. Aggregate predictions: Regression → average. Classification → majority vote
+
+**What problem it solves**: 
+
+Bagging mainly reduces variance (model instability). In other words, adding more trees cannot cause RF to overfit. The model just stops improving at some point.
+
+### 2. Attribute sampling
+
+Instead of looking for the best condition over all available features, only a random subset of features are tested at each node. 
+
+The ```ratio of attribute sampling``` is an important regularization hyperparameter. Many random forest implementations test, by default, 1/3 of the features for regression and sqrt(number of features) for classification.
+
+### 3. Disabling decision tree regularization
+
+Individual decision trees in a pure random forest are trained **without pruning**. This produces overly complex trees with poor predictive quality, but ensembling the trees produces more accurate overall predictions.
+
+- Note: Often, reducing aggressively the variance of individual decision trees (for example, by limiting their depth) improves the predictive quality of individual decision trees but degrades the predictive accuracy of the random forest.
+
+- The two sources of randomness (bagging and attribute sampling) ensure the relative independence between the decision trees. This independence corrects the overfitting of the individual decision trees. Consequently, the ensemble is not overfitted. 
+
+In practice, limiting the maximum depth and minimum number of observations per leaf is beneficial. By default, many random forests use the following defaults:
+- ```maximum depth``` of ~16
+- ```minimum number of observations per leaf``` of ~5.
+
+#### Out-of-bag evaluation
+
+Because the decision trees of a random forest are not pruned, **training a random forest does not require a validation dataset**. In practice, and especially on small datasets, models should be trained on all the available data. 
+
+Most random forests use a technique called out-of-bag-evaluation (OOB evaluation) to evaluate the quality of the model, like built-in cross-validation for bagging models. It uses the data that **was NOT sampled** when training each tree to estimate performance.
+
+**How it works**: For each data point, only use the decision **trees that did not see the example** during training to make and average their predictions.
+
+#### Pros and Cons
+
+
+
+## Gradient Boosted Decision Trees
+
+#### Intuition
+
+Gradient boosting creates a strong predictive model by iteratively combining multiple weak models, typically decision trees.
+
+In each iteration, a new weak model is trained to predict the "errors" of the current strong model, and then added to the strong model to improve its accuracy.
+
+**What is Boosting**
+
+Build many weak models **sequentially**, where each new model focuses on correcting the mistakes of previous ones. It reduces bias first, in contrast to bagging which reduces variance.
+
+**Gradient Boosting (GBM) Procedure**
+
+The procedure involves two types of models:
+
+- a "weak" machine learning model, which is typically a decision tree.
+- a "strong" machine learning model, which is composed of multiple weak models.
+
+At each step, train a new weak model $f_i$ to predict the **gradient of the loss** function. Then update the strong model's prediction: $F_{i+1}=F_i - vf_i$
+
+- Shrinkage $v$ in gradient boosting is analogous to learning rate in neural networks. Shrinkage controls how fast the strong model is learning. A smaller value helps limit overfitting. 
+
+This operation repeats until a stopping criterion is met, such as a maximum number of iterations or if the (strong) model begins to overfit as measured on a separate validation dataset.
+
+**Why this is huge**: Works with any differentiable loss, MSE for regression, log loss for classification, ranking, survival, etc.
+
+### XGBoost: Extreme Gradient Boosting
+
+It’s still gradient boosting, but now regularized, second-order, optimized version.
+
+| Feature                                    | Why it matters                     |
+| ------------------------------------------ | ---------------------------------- |
+| **Second-order gradients** (Hessian)       | Faster, more accurate optimization to leaf and tree structures |
+| **Regularization (L1/L2 on leaf weights)** | Controls overfitting               |
+| **Shrinkage (learning rate)**              | Stability                          |
+| **Column subsampling**                     | Like RF, reduces variance          |
+| **Handling missing values**                | Learns default directions          |
+| **Parallelization**                        | Much faster                        |
+| **Tree pruning**                           | Avoids overly deep trees           |
+
+- Added regularization term to objective function:
+
+    $
+    \Omega(f) = \gamma T + \frac{1}{2}\lambda \sum_{j=1}^{T} w_j^2 + \alpha \sum_{j=1}^{T} |w_j|
+    $
+
+Gradient boosted trees, unlike random forests, are susceptible to overfitting and may require regularization and early stopping techniques using a validation dataset.
+
+Common regularization parameters for gradient boosted trees include:
+
+- The maximum depth of the tree ```max_depth```.
+- The shrinkage rate ```eta```.
+- The ratio of attributes tested at each node.
+- L1 ```reg_alpha``` and L2 ```reg_lambda``` coefficient on the loss (XGBoost and LightGBM).
+- Minimum gain to create a split ```gamma``` $\gamma$
+
+Note that decision trees generally grow **much shallower than random forest** models. By default, gradient boosted trees trees in TF-DF are grown to depth 6. Because the trees are shallow, the **minimum number of examples per leaf** has little impact and is generally not tuned.
+
+### LightGBM
+
+**Key invovation: Leaf-wise growth**
+
+Unlike XGBoost which employs level-wise tree growth and grows balanced trees, it allows trees to grow asymmetrically deeper with different number of leaves, hence often making more accurate predictions.
+
+As a tradeoff, leaf-wise strategy can cause overfit on small datasets unless tuned.
+
+Other major enhancements:
+
+| Feature                                     | What it does                 |
+| ------------------------------------------- | ---------------------------- |
+| **Histogram-based splits**                  | Huge speedup                 |
+| **GOSS** (Gradient-based One-Side Sampling) | Keeps large-gradient samples |
+| **EFB** (Exclusive Feature Bundling)        | Combines sparse features     |
+| **Very memory efficient**                   | Great for big data           |
+
+**Regularization Techniques**:
+
+- Objective function: L1/L2 penalty on leaf weights, same as XGBoost
+- Tree growth: use **hard constraints on tree shapes** to prevent overfitting
+- Data level:
+    - GOSS keeps large-gradient samples and random subset of small-gradient ones. It acts like importance sampling regularization.
+    - EFB: bundles sparse features and reduces dimensional noise.
+
+
+| Goal                    | XGBoost            | LightGBM                      |
+| ----------------------- | ------------------ | ----------------------------- |
+| L2 leaf shrinkage       | `reg_lambda`       | `lambda_l2`                   |
+| L1 sparsity             | `reg_alpha`        | `lambda_l1`                   |
+| Penalize new splits     | `gamma`            | *(none directly equivalent)*  |
+| Limit tree size         | `max_depth`        | `num_leaves` (more important) |
+| Prevent tiny leaves     | `min_child_weight` | `min_data_in_leaf`            |
+| Sampling regularization | subsample          | `bagging_fraction`, **GOSS**  |
+
+In summary: 
+
+XGBoost regularizes mainly through objective penalties (L1/L2/γ), while LightGBM relies more on structural constraints (num_leaves, min_data_in_leaf) and data sampling tricks (GOSS) to control overfitting.
