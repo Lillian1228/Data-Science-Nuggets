@@ -137,7 +137,7 @@ Use the chain rule for vector derivatives. The derivative of $\tfrac{1}{2}\,r^\t
 
 $$
 \nabla_\theta J(\theta)
-= \frac{1}{2m}\cdot 2\,X^\top r(\theta)
+= \frac{1}{2m}\cdot 2X^\top r(\theta)
 = \frac{1}{m} X^\top (X\theta - y).
 $$
 - Why $X^T$?
@@ -149,7 +149,7 @@ $$
 That yields the desired result:
 
 $$
-\boxed{\nabla_\theta J(\theta)=\frac{1}{m}\,X^\top (X\theta-y).}
+\boxed{\nabla_\theta J(\theta)=\frac{1}{m}X^\top (X\theta-y).}
 $$
 
 This is the vector of partial derivatives (one per coefficient).
@@ -280,7 +280,7 @@ $$
 
 $$
 \nabla_\theta J_{\text{ridge}}
-= \frac{1}{m}X^\top (X\theta - y) \;+\; \lambda\theta.
+= \frac{1}{m}X^\top (X\theta - y) + \lambda\theta.
 $$
 
 **Gradient descent update:**

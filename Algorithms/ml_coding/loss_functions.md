@@ -165,7 +165,7 @@ $$
 
 ## Regression Loss
 
-- Mean Squared Error (MSE):
+- **Mean Squared Error (MSE)**:
 
 $$
 \text{MSE} = \frac{1}{m} \sum_{i=1}^m (y_i - \hat y_i)^2
