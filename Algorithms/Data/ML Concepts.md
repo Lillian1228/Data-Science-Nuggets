@@ -387,3 +387,69 @@ For example, you end training when the loss curve for the validation set starts 
 
 #### Regularization in Tree-based Models
 
+
+### 3. ML Fairness
+
+#### Bias Prevention
+
+- **Training data representation**: does it represent real-world prevalence to avoid bias? Data skew, where certain groups are under- or over-represented, can introduce bias and should be addressed.
+- **Missing feature values** and unexpected outliers: certain key characteristics of your dataset are missing not at random and under-represented.
+
+- **Removal of sensitive features**: protected classes like gender, race, marital status etc.
+
+#### Bias Evaluation
+
+Aggregate model performance metrics like precision, recall, and accuracy can hide biases against minority groups. Fairness in model evaluation involves ensuring equitable outcomes across different demographic groups.
+
+Fairness Metrics:
+- **Demographic parity**: promotes equal representation across demographic groups. 
+  i.e. equal admission rate across race irregardless of different qualification prevalence. 
+  
+  It does not take the distribution of ground truths for each demographic group into consideration.
+  - Disparate Impact: $\frac{P(\hat{Y} = 1 \mid D = \text{group 1})}{P(\hat{Y} = 1 \mid D = \text{group 2})}$
+  - Statistical Parity: $P(\hat{Y} = 1 \mid D = \text{group 1}) - P(\hat{Y} = 1 \mid D = \text{group 2})$
+
+- **Equal Opportunity**: ensure model is equally successful at predicting the preferred label across groups. i.e. qualified individuals have an equal chance of being accepted, regardless of their demographic group.
+
+  It is the TPR Difference between groups: $P(\hat{Y} = 1 \mid Y=1, D = \text{group 1}) - P(\hat{Y} = 1 \mid Y=1, D = \text{group 2})$
+
+  It focuses on error rates for a single class and thus is designed for use cases where there is a clear-cut preferred label. 
+  
+  If it's equally important that the model predict both the positive class ("qualified for admission") and negative class ("not qualified for admission") for all demographic groups, it may make sense to instead use the metric **equalized odds**, which enforces both **true positive rate** (TP/P) and **false negative rate** (FN/P) should be the same for all groups.
+
+- **Counterfactual fairness**: identify individual-level biases, by comparing predictions for similar individuals, differing only in a sensitive attribute like demographic group.
+
+  Particularly useful when datasets lack complete demographic information for all examples but contain it for a subset.
+
+- **Probablistic Fairness w/o sensitive classes**
+
+  **Core problem**: How can we measure racial bias in a model when we don’t know people’s race?
+
+  **What we know**: 
+  - Zip code is a weak hint (“proxy”) for race, giving a probabilistic clue of racial composition.
+  - The model’s performance (e.g., TPR, FPR) can be averaged inside each zip code
+  
+  **Core assumption**: The performance measure in a zip code is roughly the weighted average of the performance for each racial group, using the zip code’s racial proportions.
+
+  **The model**: run a simple regression where
+
+  - X = racial composition of the zip code (e.g., % White)
+  - Y = model metric for the zip code (e.g., TPR)
+
+  This regression estimates how the model metric changes as the racial makeup changes. The coefficients are estimated racial disparity on model metrics (e.g., difference in TPR between White and Non‑White borrowers).
+
+  - WOLS is used instead of plain OLS so that:
+    - zip codes with more people count more
+    - zip codes with few people don’t distort the results
+
+  **Summary**: The method estimates race bias by regressing model performance metrics (TPR, FNR etc) against the racial makeup of each zip code, using zip-code-level averages and census proportions to infer how the model treats different racial groups—even without individual race labels.
+
+
+#### Bias Mitigation Techniques
+
+- **Augmenting the training data**: collecting additional data to address missing, incorrect, or skewed data. but it can be infeasible due to data availability or resource constraints.
+- **Adjusting the model's loss function**
+  - **MinDiff** aims to balance the errors for two different slices of data (male/female students versus nonbinary students) by adding a penalty for differences in the prediction distributions for the two groups.
+  - **Counterfactual Logit Pairing (CLP)** aims to ensure that changing a sensitive attribute of a given example doesn't alter the model's prediction for that example. i.e. if two examples have identical feature values except for gender, CLP will penalize the discrepancies in their predictions.
+  
+  &rarr; MinDiff addresses bias by aligning score distributions for two subgroups. CLP tackles bias by ensuring that individual examples are not treated differently solely because of their subgroup membership.
