@@ -77,7 +77,7 @@ UCB selects the best arm based on:
 - The first term encourages exploitation (pick the best average reward so far).
 - The second term encourages exploration (try arms that have been pulled less often, since their estimates are more uncertain).
 - c is a tuning parameter that scales exploration vs exploitation.
-- UCB initializes by pulling each arm once (to get at least one reward sample). Note that UCB does not need to set optimistic initial values at start, as it already handles exploration explicitly through confidence bounds to ensure arms not tried much to get inflated scores.
+- UCB initializes by pulling each arm once (to get at least one reward sample). Note that UCB does not need to set optimistic initial values at start, as it already handles exploration explicitly through confidence bounds to ensure **arms not tried much to get inflated scores**.
 
 
 UCB often performs well but is harder to extend to more general reinforcement learning problems with large state spaces or nonstationary environments.

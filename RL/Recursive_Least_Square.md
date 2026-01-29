@@ -2,9 +2,9 @@
 
 ### What is Recursive Least Squares (RLS)?
 
-RLS is an **online version of linear regression**.
+RLS is an **online closed form version of linear regression**.
 
-* In ordinary least squares, you solve once:
+* In ordinary least squares, you solve once with normal equation:
 
 $$
 \theta = (X^\top X + \lambda I)^{-1} X^\top y

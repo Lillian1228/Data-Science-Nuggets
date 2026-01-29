@@ -92,6 +92,9 @@ df[(df['A'] > 0) & (df['B'].isin(['x', 'y']))]
 # filter on both rows and columns
 df.loc[row_boolean_mask, [cols]]
 
+# update column values for filtered rows
+seat.loc[seat['id']%2==0, 'student'] = original_students.shift(1)
+
 # multiple value filters using .loc[] 
 order_summary.loc[order_summary['order_count']>=3] \ 
                  .loc[order_summary['year'].diff(periods=1)==1] \ # two consecutive years

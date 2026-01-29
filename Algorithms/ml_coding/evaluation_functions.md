@@ -1,6 +1,37 @@
 ## Classification
 
+### Threshold-Free
 
+#### Area Under the ROC Curve (AUC)
+
+<img src="src/roc.png" width="400">
+
+AUC is influenced by the probability ranking result only, and it is not related to the setting of the classification threshold.
+
+
+#### Area under Precision-Recall Curve (AUPRC) / Average Precision
+
+AUPRC measures **how well the model balances precision and recall** across thresholds. The Precision Recall curve **does not care about True Negatives**. 
+
+For imbalanced data, a large quantity of True Negatives usually overshadows the effects of changes in other metrics like False Positives. The AUCPR will be much more sensitive to True Positives, False Positives, and False Negatives than AUC. As such, AUPRC is recommended over AUC for highly imbalanced data. 
+
+The baseline of AUPRC is equal to the fraction of positives.
+
+<img src="src/auprc.png" width="400">
+
+### Threshold Dependent
+
+<img src="src/confusion_matrix.png" width="600">
+
+- **Recall (sensitivity) / True Positive Rate**: Out of all the positive classes, how much we predicted correctly.
+
+- **Precision**: Out of all the positive classes we have predicted, how many are actually positive.
+
+- **F score**: helps to measure Recall and Precision at the same time using Harmonic Mean. 
+
+    $F-score = 2*recall*precision / (recall + precision)$
+
+- **False Positive Rate (Type I Error)**: FPR = FN / N = FN / (FP+TN). The proportion of all truly negative cases that the test wrongly identifies as positive.
 
 ## Competing Risk Analysis (Multi-Class Survival Analysis)
 

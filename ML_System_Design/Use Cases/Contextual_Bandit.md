@@ -59,7 +59,7 @@ The business success metric is focusing on the increase in engagement (CTR) amon
         - Plan-level: employer features (industry, size, enrollment type)
     - Arms (A): Eligible messages for this user at this moment - each with metadata: 
       - topic, format, risk category, historical CTR, novelty age, campaign priority
-    - Rewards (r): A single scalar per impression or per session factoring multiple objectives (clicks and task completions).
+    - Rewards (r): A single scalar per impression or per session factoring multiple objectives (clicks or task completions).
       - Weights are tunable; use business value or Shapley-style attribution. Time-decay rewards so earlier completions are worth more.
       -  Assign delayed rewards back to their triggering message with a reasonable window (e.g., 7–14 days) and last-touch or fractional credit.
 
@@ -261,7 +261,7 @@ Actual Results:
 #### LinGreedy Recap
 
 * It’s basically **LinUCB without the confidence bonus**.
-* The model is a **linear regression per arm** (or pooled with shared weights), learning:
+* The model is a **ridge linear regression per arm** (or pooled with shared weights), learning:
 
 $$
 \hat r(x,a) = \theta_a^\top x
