@@ -11,11 +11,29 @@
 
 | **Normalization technique** | **Formula** | **When to use** | **Example** |
 |-----------------------------|-------------|------------------| --|
-| **Linear scaling** | $x' = \frac{x - x_{\min}}{x_{\max} - x_{\min}}$ | When the feature is mostly uniformly distributed across range. **Flat-shaped** | Age |
-| **Z-score scaling** | $x' = \frac{x - \mu}{\sigma}$ | When the feature is normally distributed (peak close to mean) or somewhat normal within the bulk of its range. **Bell-shaped** | Net Worth |
-| **Log scaling** | $x' = \log(x)$ | When the feature distribution is heavy skewed on at least either side of tail. **Heavy Tail-shaped** | Book Sales |
+| **Linear scaling (MinMaxScaler)** | $x' = \frac{x - x_{\min}}{x_{\max} - x_{\min}}$ | When the feature is mostly uniformly distributed across range. **Flat-shaped** | Age |
+| **Z-score scaling (StandardScaler)** | $x' = \frac{x - \mu}{\sigma}$ | When the feature is normally distributed (peak close to mean) or somewhat normal within the bulk of its range. **Bell-shaped** | Net Worth |
+| **Log scaling** | $x' = \log(x)$ | When the feature distribution is heavily right skewed and values are non-negative. **Heavy Tail-shaped** | Book Sales | 
+| **RobustScaler**  | $x' = \frac{x-median}{IQR}$ | when the feature contains significant outliers that would otherwise skew the mean and std. | net worth |
 | **Clipping** | If $x > \text{max}$, set $x' = \text{max}$ <br> If $x < \text{min}$, set $x' = \text{min}$ | When the feature contains extreme outliers. It can be combined with other methods like z-score scaling | Net Worth |
 ---
+
+#### Playbook for L1 Logistic
+
+For Logistic Regression with L1 (Lasso) regularization, normalization/transform choices matter a lot because L1 penalizes coefficients by magnitude. If features are on different scales, the penalty is effectively “uneven”.
+
+| **Group** | **Skewness (asymmetry)** | **Excess Kurtosis (outlier-prone)** | **Non-Negative** | **Transform** | **Scaler** |
+|-----------------------------|-------------|------------------| --|--| --|
+| Near-normal / symmetric continuous features | [-1,1] | < 1 or 2 |  | None | ```StandardScaler```|
+| Heavy tails/outliers but symmetric | [-1,1] | >=1 or 2 |  | None | ```RobustScaler```|
+| Strong right-skewed, non-negative (counts, amounts) | >1 | Any | Yes | ```log1p``` | ```StandardScaler``` or ```RobustScaler``` (depends on kurtosis)  |
+| Strong right-skewed with negatives  | >1 | Any | No | ```PowerTransformer(method="yeo-johnson")``` | ```StandardScaler``` or ```RobustScaler``` (depends on kurtosis)  |
+| Strong left-skewed  | <-1 | Any | Any | ```PowerTransformer(method="yeo-johnson")``` | ```StandardScaler``` or ```RobustScaler``` (depends on kurtosis)  |
+
+
+- **Why Log transform**: log compresses extremes, makes the feature “more linear” in log-odds, and reduces coefficient instability.
+
+- **Why Yeo–Johnson**: Yeo–Johnson is a strong default because it works with negatives and often improves linear separability for logistic regression.
 
 ### 2. Binning (or Bucketing)
 
@@ -91,11 +109,16 @@ Categorical data has a specific set of possible values. For example:
   
 **Encoding** means converting categorical or other data to numerical vectors that a model can train on. This conversion is necessary because models can only train on floating-point values; models can't train on strings such as "dog" or "maple". 
 
-### 1. One-hot encoding (for low number of categories)
+### Low number of categories
 
+#### 1. One-hot encoding
 Each category is represented by a vector (array) of N elements, where N is the number of categories. 
 
 Exactly one of the elements in a one-hot vector has the value 1.0; all the remaining elements have the value 0.0.
+
+```python
+skleran.preprocessing.OneHotEncoder(min_frequency=0.01, sparse_output=False)  # bucket needs to have at least 1% of sample
+```
 
 <img src="src/4.png" width="500">
 
@@ -115,7 +138,103 @@ Exactly one of the elements in a one-hot vector has the value 1.0; all the remai
 
    Lump the rare outliers into a single "catch-all" category called **out-of-vocabulary (OOV)**. In other words, all the outliers are binned into a single outlier bucket. The system learns a single weight for that outlier bucket.
 
-### 2. Embeddings (high-dimensional categorical features)
+#### 2. Target Encoding (Mean Encoding)
+
+Replace category with the average target value for that category. 
+
+**Cross validation is a must to prevent from target leakage**. Data is split into K folds, and the target mean for a category in a specific fold is computed using only data from remaining K-1 folds. It ensures each row's encoding excludes its own target value.
+
+It requires **smoothing** which mixes the global target mean with the target mean conditioned on the value of the category.
+
+```python
+skleran.preprocessing.TargetEncoder(smooth='auto', cv=5)  # bucket needs to have at least 1% of sample
+```
+
+#### 3. Weight of Evidence Encoding (WoE)
+
+Weight of Evidence (WoE) is a supervised encoding method used mainly in **credit risk modeling** and **logistic regression** and binary classification in general.
+
+It converts a categorical (or binned numerical) feature into a continuous number that reflects how strongly each category is associated with the positive vs negative class (binary classification).
+
+WoE measures how strongly a category separates the two classes:
+
+- Good outcome (e.g., non‑default)
+- Bad outcome (e.g., default)
+
+Each category is encoded by comparing the proportion of goods in that category vs
+the proportion of bads in that category.
+
+This comparison is expressed as a **log‑odds ratio**.
+
+**Formula**: For a category i, $\text{WoE}_i=$ = $\ln($ % Good Outcomes / % Bad Outcomes $)$ 
+
+**Interpretation**:
+
+| WoE value        | Meaning |
+|------------------|---------|
+| WoE > 0          | Category is associated with more bads (higher risk) |
+| WoE = 0          | Category has no discriminatory power |
+| WoE < 0          | Category is associated with more goods (lower risk) |
+| Larger \|WoE\|   | Stronger predictive signal |
+
+Relationship to **Information Value (IV)**:
+- WoE is often used with Information Value (IV), which measures a feature’s overall predictive power.
+- $IV=\sum($ % of non-events $-$ % of events $)$ $\times WOE$
+  
+  | IV        | Predictive Power Rule of Thumb|
+  |------------------|---------|
+  | $<0.02$       | unpredictive / useless |
+  | $0.02 - 0.1$     | Weak |
+  | $0.1 - 0.3$        | Medium |
+  | $>0.5$   | Strong |
+
+```python
+from category_encoders.woe import WOEEncoder
+
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LogisticRegression
+
+# Note: WOEEncoder() doesn't support cv internally. It has to be passed as part of model pipeline for CV evaluation during param tuning and model iterations.
+
+preprocess = ColumnTransformer(
+    transformers=[
+        ("woe",WOEEncoder(
+                cols=cat_cols,
+                smoothing=0.5,
+                handle_unknown="value",
+                handle_missing="value"
+            ),
+            cat_cols),
+        ("num",
+            StandardScaler(),
+            num_cols)
+    ],
+    remainder="drop"   # explicit is better than implicit
+)
+
+pipe = Pipeline([
+    ("preprocess", preprocess),
+    ("model", LogisticRegression(max_iter=1000))
+])
+
+# For scoring, refit on full training data and save the pipeline
+pipe.fit(X_train, y_train)
+joblib.dump(pipe, "credit_model_pipeline.joblib")
+```
+
+Pros:
+- Unlike one‑hot encoding, WoE produces a single numeric column, avoiding multicollinearity.
+- Works for Categorical and Numerical Features (binning is critical)
+- Feature value interpretation: 
+  - Higher WoE → higher risk contribution
+  - Lower WoE → safer segment
+Cons:
+- zero count problem: If a category has zero goods or bads WoE becomes infinite.
+  - Fixes: merge rare categories, laplace smoothing (add small constants)
+
+Replace category with its count or proportion.
+
+### Embeddings (high-dimensional categorical features)
 
 Some categorical features have a high number of dimensions, such as words in english with ~500K categories, us postal codes with 42K categories, last names in Germany with 850K values.
 
@@ -202,7 +321,28 @@ Overuse of feature crosses with sparse features should be avoided, as it can lea
 - **Direct labels**, which are labels identical to the prediction your model is trying to make.
 - **Proxy labels**, which are labels that are similar—but not identical—to the prediction your model is trying to make. For example, a person subscribing to Bicycle Bizarre magazine probably—but not definitely—owns a bicycle.
 
-### 2. Class imbalance
+### 2. Dividing the dataset
+
+Most common practice is to split into 3 subsets:
+- A training set that the model trains on.
+- A test set for evaluation of the trained model.
+- A validation set performs the initial testing on the model as it is being trained.
+
+<img src="src/6.png" width="500">
+
+Use the validation set to evaluate results from the training set. After repeated use of the validation set suggests that your model is making good predictions, use the test set to double-check your model.
+
+Note: test sets and validation sets still "wear out" with repeated use. That is, the more you use the same data to make decisions about hyperparameter settings or other model improvements, the less confidence that the model will make good predictions on new data. For this reason, it's a good idea to collect more data to "refresh" the test set and validation set. Starting anew is a great reset.
+
+In summary, a good test set or validation set meets all of the following criteria:
+- Large enough to yield statistically significant testing results.
+- Representative of the dataset as a whole. In other words, don't pick a test set with different characteristics than the training set.
+- Representative of the real-world data that the model will encounter as part of its business purpose.
+- Zero examples duplicated in the training set.
+
+In practice, for a small dataset, using **cross-validation** would be preferable as it would compute more accurate evaluation metric values.
+
+### 3. Class imbalance
 
 Imbalanced datasets occur when one label (majority class) is significantly more frequent than another (minority class), potentially hindering model training on the minority class.
 
@@ -221,12 +361,18 @@ As imbalance increases, you should move away from pure classification.
 - **Undersample** the majority (preferred)
   - When to use: huge dataset and majority class dominates (comuptational inefficiency).
   - Risk: losing important majority class information.
+  
+  ```python
+  from imblearn.under_sampling import RandomUnderSampler
+  sampler = RandomUnderSampler(sampling_strategy=0.1, random_state=42, replacement=False) # 1:10 minority: majority
+  ```
 - **Oversample** the minority: random, SMOTE, etc.
   - When to use: you have too few minority samples.
   - SMOTE (Synthetic Minority Over-sampling Technique): Creates synthetic samples by interpolating between close minority points.
     - rarely recommended: amplify noise, only used when minority class is well-clustered
   
   - Risk: overfitting if synthetic samples are too similar.
+- Sampling should happen **after** train-test split and only to training data.
 
 #### Loss-level Techniques
 - **Class weighting**: assign different penalities to minority / majority samples in loss function
@@ -268,26 +414,47 @@ As imbalance increases, you should move away from pure classification.
   - PR-AUC (Precision-Recall AUC) ← BEST when extreme imbalance
   - Confusion matrix
 
-### 3. Dividing the dataset
+### 4. Feature Selection
 
-Most common practice is to split into 3 subsets:
-- A training set that the model trains on.
-- A test set for evaluation of the trained model.
-- A validation set performs the initial testing on the model as it is being trained.
+#### Univariate Feature Selection
 
-<img src="src/6.png" width="500">
+1. Variance Threshold: Removes features with very low variance.
+    - ```sklearn.feature_selection.VarianceThreshold(threshold=0.0)```
+2. **Chi-Square Test**: Measures dependence between a categorical feature and a categorical target
+     - Tests whether observed frequencies differ from expected frequencies
+     - Assumes: 
+       - Large enough sample size; 
+       - Features only in **Non‑negative integer** values (i.e. boolean or frequency).
+     - ```sklearn.feature_selection.chi2```
 
-Use the validation set to evaluate results from the training set. After repeated use of the validation set suggests that your model is making good predictions, use the test set to double-check your model.
 
-Note: test sets and validation sets still "wear out" with repeated use. That is, the more you use the same data to make decisions about hyperparameter settings or other model improvements, the less confidence that the model will make good predictions on new data. For this reason, it's a good idea to collect more data to "refresh" the test set and validation set. Starting anew is a great reset.
+3. ANOVA F-test: Compares the means of a numeric feature across classes.
+     - Tests whether at least one class mean differs significantly
+     - Assumptions: 
+       - Normally distributed features (approximate)
+       - Homogeneity of variances (less strict in practice)
+     - ```from sklearn.feature_selection import f_classif, f_regression```
 
-In summary, a good test set or validation set meets all of the following criteria:
-- Large enough to yield statistically significant testing results.
-- Representative of the dataset as a whole. In other words, don't pick a test set with different characteristics than the training set.
-- Representative of the real-world data that the model will encounter as part of its business purpose.
-- Zero examples duplicated in the training set.
+Even if we set a low per‑test error rate (e.g. α = 0.05), testing many features independently causes the total number and probability of false positives to grow quickly.
 
-In practice, for a small dataset, using **cross-validation** would be preferable as it would compute more accurate evaluation metric values.
+Example: among 10K features with a significance level of 0.05, expect ~500 false positives.
+
+&rarr; Choose appropriate selection criteria based on how p-values are controlled for multiple testing.
+
+- ```SelectFpr(score_func=f_classif, alpha=0.05)```: 
+  - Select features where p_value< alpha
+  - Controls the FPR per test, equivalent to no multiple-testing correction.
+  - Most lenient, good for exploratory analysis
+- ```SelectFdr(score_func=f_classif, alpha=0.05)``` - False Discovery Rate (Benjamini–Hochberg): 
+  - Controls the **expected proportion of false positives among selected features**.
+  - Selection criteria: $E[$ false positives/selected features $]<=\alpha$
+  - Among selected features, at most $\alpha$ are false positives.
+  - Scales well to high-dimensional data (text, geomics). Best suited when you want many features but controlled noise.
+- ```SelectFwe(score_func=f_classif, alpha=0.05)``` - **Family-Wise Error Rate (Bonferroni)**:
+  - Controls the probability of at least one false positive
+  - Selection criteria: $p < \alpha/N$ where N is the number of features.
+  - This means the probability of any false positive is <=$\alpha$.
+  - Very conservative, low statistical power, might be suited for scientific or regulatory settings.
 
 
 ## Model Generalization

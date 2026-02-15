@@ -35,7 +35,7 @@ AUC is the probability that the recommender will rank a randomly chosen relevant
 
   * Plot True Positive Rate (TPR) vs False Positive Rate (FPR) at multiple thresholds.
   * AUC = area under this curve.
-* Works with **binary relevance**, **Insensitive to top-K cutoff**: it measures overall ranking quality, not just the top of the list.
+* Works with **binary relevance**, **Insensitive to top-K cutoff**: it measures overall ranking quality, not just the top of the list. Offline AUC is often weak proxy.
 
 ### 1.3 🟢 Hit Rate @K (HR\@K)
 

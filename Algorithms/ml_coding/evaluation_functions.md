@@ -1,37 +1,116 @@
 ## Classification
 
-### Threshold-Free
+### Ranking/Curve Metrics (threshold-sweeping)
 
-#### Area Under the ROC Curve (AUC)
+#### 1. Area Under the ROC Curve (ROC-AUC)
 
 <img src="src/roc.png" width="400">
 
-AUC is influenced by the probability ranking result only, and it is not related to the setting of the classification threshold.
+- Probability a random positive ranks above a random negative.
+- Best when you care about performance across all thresholds, but can look optimistic in highly imbalanced data.
+- AUC is influenced by the probability ranking result only, and it is not related to the setting of the classification threshold.
 
 
-#### Area under Precision-Recall Curve (AUPRC) / Average Precision
+#### 2. Area under Precision-Recall Curve (AUPRC) / Average Precision
 
-AUPRC measures **how well the model balances precision and recall** across thresholds. The Precision Recall curve **does not care about True Negatives**. 
+- AUPRC measures **how well the model balances precision and recall** across thresholds. 
+- Often more informative than ROC‑AUC when positives are rare (fraud, defects, rare disease) as the Precision Recall curve **does not care about True Negatives**. 
 
-For imbalanced data, a large quantity of True Negatives usually overshadows the effects of changes in other metrics like False Positives. The AUCPR will be much more sensitive to True Positives, False Positives, and False Negatives than AUC. As such, AUPRC is recommended over AUC for highly imbalanced data. 
+    For imbalanced data, a large quantity of True Negatives usually overshadows the effects of changes in other metrics like False Positives. The AUCPR will be much more sensitive to True Positives, False Positives, and False Negatives than AUC. As such, AUPRC is recommended over AUC for highly imbalanced data. 
 
-The baseline of AUPRC is equal to the fraction of positives.
+- The baseline of AUPRC is equal to the fraction of positives.
 
-<img src="src/auprc.png" width="400">
+    <img src="src/auprc.png" width="400">
 
-### Threshold Dependent
+### Threshold Dependent Evaluation
+
+#### 1. Confusion Matrix
+
+|   |Predicted Positive	|Predicted Negative|
+|---- | ----| ---|
+|Actual Positive|	TP	|FN|
+|Actual Negative|	FP	|TN|
+
+Cost Matrix in industry lens:
+
+- $C_{FP}$ = false alarm cost
+- $C_{FN}$ = missed opportunity or risk cost
+- $V_{TP}$ = captured value
+- $V_{TN}$ = often zero value
+
+Threshold tuning = selecting the operating point that maximizes business value.
+
+$\text{Expected Profit} = TP \cdot V_{TP} - FP \cdot C_{FP} - FN \cdot C_{FN}$
 
 <img src="src/confusion_matrix.png" width="600">
 
-- **Recall (sensitivity) / True Positive Rate**: Out of all the positive classes, how much we predicted correctly.
+#### 2. Derived Metrics
 
-- **Precision**: Out of all the positive classes we have predicted, how many are actually positive.
+| Metric | Formula | What It Really Means |
+|---|---|---|
+| **Recall (Sensitivity) / TPR** | TP / (TP + FN) | Of real positives, how many did we catch |
+| **Precision** | TP / (TP + FP) | How clean our positive predictions are |
+| Specificity (TNR) | TN / (TN + FP) | How well we avoid false alarms |
+| **FPR (Type I Error)** | FP / (FP + TN) = 1-Specificity | Annoyance rate (false-alarm rate). The proportion of negatives we wrongly identifies as positive. |
+| Accuracy | (TP + TN) / (TP + TN + FP + FN) | Usually useless under class imbalance |
+| F1 | 2 × (Precision × Recall) / (Precision + Recall) | Balance of precision & recall (harmonic mean) |
+| AUC-ROC | (threshold-free; area under ROC curve) | Ranking quality across thresholds (“how well positives score above negatives”) |
+| PR-AUC | (threshold-free; area under Precision–Recall curve) | Ranking quality focused on positives; better for rare events |
 
-- **F score**: helps to measure Recall and Precision at the same time using Harmonic Mean. 
+### Metrics That Map to Business Actions
 
-    $F-score = 2*recall*precision / (recall + precision)$
+#### 1. Top-K / Capacity-limited metrics
 
-- **False Positive Rate (Type I Error)**: FPR = FN / N = FN / (FP+TN). The proportion of all truly negative cases that the test wrongly identifies as positive.
+When you can only action on K cases (i.e. capped UI slots for content recommendations, outreach capacity due to budget constraint), want a high response rate.
+
+- **Precision@K**: among top K scored, fraction truly positive
+- **Recall@K**: fraction of all positives captured within top K
+- **Hit Rate@K** (recommendation / retrieval): did we get at least one correct item in top K?
+- **Lift@K**: “How much better than random targeting?”
+    $$\text{Lift@K}=\frac{\text{Precision@K}}{\text{Base rate}}​$$
+
+#### 2. Constrained Trade-off on Error Rate
+
+When misclassification induces business costs, there may be a need to cap on specific type of errors a model make. 
+
+Fraud detection is a typical scenario with trade-off between
+- false negatives (miss fraud) could lead to financial loss
+- false positives (flag legitimate transaction) could cause customer friction.
+
+Common industry practices:
+- **Recall@fixed FPR**: set FPR cap (i.e. 1% legit transactions blocked at max) and maximize recall within that constraint
+- Optimize on expected loss directly
+
+```python
+import numpy as np
+from sklearn.metrics import roc_curve
+
+def recall_under_fpr_constraint(y_true, y_score, target_fpr=0.01):
+    fpr, tpr, thresholds = roc_curve(y_true, y_score)
+    
+    valid = fpr <= target_fpr
+    
+    if not np.any(valid):
+        return None
+    
+    best_idx = np.argmax(tpr[valid])
+    
+    return {
+        "threshold": thresholds[valid][best_idx],
+        "fpr": fpr[valid][best_idx],
+        "recall": tpr[valid][best_idx]
+    }
+```
+
+#### 3. Assistive Interventions for Targeting
+
+When the interventions are not punitive (do not hurt customer experience)and the goal is to target top % of customers and maximize conversions overall. i.e. customer churn prediction (retention targeting)
+
+Common industry practices: Select top N customers, compare against random targeting and evaluate incremental conversion.
+- **Precision@top decile**: offer efficiency
+- **Lift@top decile** / Gains/Lift curves: Are the top-scored customers more likely to churn than average?
+- **Recall@top decile**: how much churn/conversion you cover with limited outreach
+- Incremental uplift metrics (if you have randoized treatment/control):  Uplift@K, AUUC, Qini (measures causal lift of intervention)
 
 ## Competing Risk Analysis (Multi-Class Survival Analysis)
 

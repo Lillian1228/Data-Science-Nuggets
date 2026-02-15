@@ -115,7 +115,7 @@ df['event_date'].between("2013-10-01", "2013-10-03")
 ```python
 
 # drop columns
-df.drop(columns=column_list)
+df = df.drop(columns=column_list) # warning free
 df.drop(column_names, axis=1, inplace=True) # alternative
 
 # drop rows
